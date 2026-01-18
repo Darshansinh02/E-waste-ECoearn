@@ -172,10 +172,11 @@ After signing up, you can test different scenarios:
 - Photo compression
 - User profiles visibility
 - Search functionality
-
+-
 ## Support
 
 For issues or questions, please contact: support@ecoearn.com
+23ce78@svitvasad.ac.in
 
 ---
 
