@@ -251,6 +251,17 @@
                     </ul>
                 </div>
                 <div class="navbar-right">
+                    <div class="notification-container">
+                        <button id="notificationBell" class="btn btn-secondary btn-notification" onclick="toggleNotificationPanel('notificationPanel','notificationBadge','notificationList','noNotifications')" aria-label="Notifications">🔔 <span id="notificationBadge" class="notification-badge" style="display:none">0</span></button>
+                        <div id="notificationPanel" class="notification-panel" style="display:none">
+                            <div class="notification-header">
+                                <span>Notifications</span>
+                                <button class="btn-clear" onclick="clearNotifications()" type="button">Clear</button>
+                            </div>
+                            <ul id="notificationList" class="notification-list"></ul>
+                            <div id="noNotifications" class="notification-empty">No new notifications</div>
+                        </div>
+                    </div>
                     <span id="userGreeting" class="user-greeting">Welcome!</span>
                     <button onclick="logout()" class="btn btn-secondary">Log Out</button>
                 </div>
@@ -300,6 +311,17 @@
                     </ul>
                 </div>
                 <div class="navbar-right">
+                    <div class="notification-container">
+                        <button id="notificationBell2" class="btn btn-secondary btn-notification" onclick="toggleNotificationPanel('notificationPanel2','notificationBadge2','notificationList2','noNotifications2')" aria-label="Notifications">🔔 <span id="notificationBadge2" class="notification-badge" style="display:none">0</span></button>
+                        <div id="notificationPanel2" class="notification-panel" style="display:none">
+                            <div class="notification-header">
+                                <span>Notifications</span>
+                                <button class="btn-clear" onclick="clearNotifications()" type="button">Clear</button>
+                            </div>
+                            <ul id="notificationList2" class="notification-list"></ul>
+                            <div id="noNotifications2" class="notification-empty">No new notifications</div>
+                        </div>
+                    </div>
                     <span id="userGreeting2" class="user-greeting">Welcome!</span>
                     <button onclick="logout()" class="btn btn-secondary">Log Out</button>
                 </div>
@@ -435,6 +457,17 @@
                     </ul>
                 </div>
                 <div class="navbar-right">
+                    <div class="notification-container">
+                        <button id="notificationBell3" class="btn btn-secondary btn-notification" onclick="toggleNotificationPanel('notificationPanel3','notificationBadge3','notificationList3','noNotifications3')" aria-label="Notifications">🔔 <span id="notificationBadge3" class="notification-badge" style="display:none">0</span></button>
+                        <div id="notificationPanel3" class="notification-panel" style="display:none">
+                            <div class="notification-header">
+                                <span>Notifications</span>
+                                <button class="btn-clear" onclick="clearNotifications()" type="button">Clear</button>
+                            </div>
+                            <ul id="notificationList3" class="notification-list"></ul>
+                            <div id="noNotifications3" class="notification-empty">No new notifications</div>
+                        </div>
+                    </div>
                     <span id="userGreeting3" class="user-greeting">Welcome!</span>
                     <button onclick="logout()" class="btn btn-secondary">Log Out</button>
                 </div>
