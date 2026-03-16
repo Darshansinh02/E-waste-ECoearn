@@ -614,7 +614,152 @@ function loadUserDashboard(email) {
 
     // Load waste submissions stats
     loadWasteStats(email);
+
+    // Refresh notification state for logged-in user
+    initializeNotificationsForUser(email);
 }
+
+// ==================== Notifications (Owner/Server messages) ====================
+function getCurrentUser() {
+    return localStorage.getItem('ecolearn_currentUser');
+}
+
+function getUserNotifications(email) {
+    const key = `ecolearn_notifications_${email}`;
+    const saved = localStorage.getItem(key);
+    if (!saved) return [];
+    try {
+        return JSON.parse(saved);
+    } catch (e) {
+        return [];
+    }
+}
+
+function saveUserNotifications(email, notifications) {
+    const key = `ecolearn_notifications_${email}`;
+    localStorage.setItem(key, JSON.stringify(notifications));
+}
+
+function addNotification(text) {
+    const email = getCurrentUser();
+    if (!email) return;
+    const notifications = getUserNotifications(email);
+    const newItem = {
+        id: Date.now(),
+        message: text,
+        createdAt: new Date().toISOString(),
+        read: false
+    };
+    notifications.unshift(newItem);
+    saveUserNotifications(email, notifications);
+    renderNotifications(email);
+}
+
+function renderNotifications(email) {
+    const notifications = getUserNotifications(email);
+
+    const entries = [
+        {list: 'notificationList', badge: 'notificationBadge', empty: 'noNotifications', panel: 'notificationPanel'},
+        {list: 'notificationList2', badge: 'notificationBadge2', empty: 'noNotifications2', panel: 'notificationPanel2'},
+        {list: 'notificationList3', badge: 'notificationBadge3', empty: 'noNotifications3', panel: 'notificationPanel3'}
+    ];
+
+    entries.forEach(entry => {
+        const listEl = document.getElementById(entry.list);
+        const badgeEl = document.getElementById(entry.badge);
+        const emptyEl = document.getElementById(entry.empty);
+
+        if (!listEl || !badgeEl || !emptyEl) return;
+
+        listEl.innerHTML = '';
+
+        if (notifications.length === 0) {
+            emptyEl.style.display = 'block';
+            badgeEl.style.display = 'none';
+        } else {
+            emptyEl.style.display = 'none';
+            notifications.slice(0, 10).forEach(n => {
+                const item = document.createElement('li');
+                item.textContent = `${new Date(n.createdAt).toLocaleString()}: ${n.message}`;
+                listEl.appendChild(item);
+            });
+
+            const unreadCount = notifications.filter(n => !n.read).length;
+            badgeEl.textContent = unreadCount;
+            badgeEl.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+        }
+    });
+}
+
+function toggleNotificationPanel(panelId, badgeId, listId, emptyId) {
+    const panel = document.getElementById(panelId);
+    if (!panel) return;
+
+    if (panel.style.display === 'block') {
+        panel.style.display = 'none';
+        return;
+    }
+
+    // Close other panels
+    ['notificationPanel', 'notificationPanel2', 'notificationPanel3'].forEach(id => {
+        const p = document.getElementById(id);
+        if (p && id !== panelId) p.style.display = 'none';
+    });
+
+    panel.style.display = 'block';
+
+    const email = getCurrentUser();
+    if (email) {
+        renderNotifications(email);
+        const all = getUserNotifications(email);
+        all.forEach(n => (n.read = true));
+        saveUserNotifications(email, all);
+        renderNotifications(email);
+    }
+}
+
+function clearNotifications() {
+    const email = getCurrentUser();
+    if (!email) return;
+
+    saveUserNotifications(email, []);
+    renderNotifications(email);
+}
+
+function initializeNotificationsForUser(email) {
+    renderNotifications(email);
+
+    // Simulate server/app-owner notifications for demo
+    if (!localStorage.getItem(`ecolearn_notifications_init_${email}`)) {
+        addNotification('Welcome to ECOEarn! New rewards are available in Reward Shop.');
+        addNotification('Tips from owner: Recycle old cables safely.');
+        localStorage.setItem(`ecolearn_notifications_init_${email}`, 'true');
+    }
+
+    // Poll server side every minute for updates (fake demo messages)
+    if (window.notificationPoller) {
+        clearInterval(window.notificationPoller);
+    }
+    window.notificationPoller = setInterval(() => {
+        const randomMsgs = [
+            'Server: Your last submission has been verified. Keep it up!',
+            'Owner: We have new pick-up slots available tomorrow.',
+            'Server: You earned bonus points for completing 3 submissions in a week!'
+        ];
+        const message = randomMsgs[Math.floor(Math.random() * randomMsgs.length)];
+        addNotification(message);
+    }, 60000);
+}
+
+// Close notification panels when clicking outside
+window.addEventListener('click', function(e) {
+    if (!e.target.closest('.notification-container')) {
+        ['notificationPanel', 'notificationPanel2', 'notificationPanel3'].forEach(id => {
+            const p = document.getElementById(id);
+            if (p) p.style.display = 'none';
+        });
+    }
+});
 
 // ==================== Logout Function ====================
 function logout() {
