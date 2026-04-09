@@ -8,7 +8,9 @@ const SubmissionSchema = new mongoose.Schema({
     description: { type: String },
     collectionMethod: { type: String, required: true },
     collectionAddress: { type: String },
-    ewastePhoto: { type: String },
+    pickupDate: { type: String },
+    pickupTime: { type: String },
+    ewastePhoto: { type: String, required: true },
     pointsEarned: { type: Number, required: true },
     status: { type: String, default: 'pending' },
     submittedAt: { type: Date, default: Date.now }
