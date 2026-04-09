@@ -505,7 +505,70 @@
         </div>
     </div>
 
+    <!-- Admin Dashboard Page -->
+    <div id="adminPage" class="page">
+        <div class="dashboard-wrapper">
+            <nav class="navbar">
+                <div class="navbar-left">
+                    <h1 class="logo">⚙ ECOEarn Admin</h1>
+                </div>
+                <div class="navbar-center">
+                    <ul class="nav-menu">
+                        <li><a href="#" onclick="switchPage('adminPage')" class="nav-link active">Admin Dashboard</a></li>
+                    </ul>
+                </div>
+                <div class="navbar-right">
+                    <span class="user-greeting">Welcome, Admin!</span>
+                    <button onclick="logout()" class="btn btn-secondary">Log Out</button>
+                </div>
+            </nav>
+
+            <div class="dashboard-content">
+                <div class="dashboard-section">
+                    <h3>Platform Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="adminTotalUsers">0</div>
+                            <div class="stat-label">Total Users</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="adminPendingSubs">0</div>
+                            <div class="stat-label">Pending Reviews</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="adminTotalWeight">0</div>
+                            <div class="stat-label">kg Total Recycled</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-section" style="margin-top: 30px;">
+                    <h3>E-Waste Submissions</h3>
+                    <div class="admin-table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>User</th>
+                                    <th>Item</th>
+                                    <th>Weight (kg)</th>
+                                    <th>Status</th>
+                                    <th>Points</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminSubmissionsTable">
+                                <!-- Loaded via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="js/auth.js"></script>
     <script src="js/validation.js"></script>
+
 </body>
 </html>
