@@ -149,4 +149,37 @@ router.post('/read-notifications/:email', async (req, res) => {
     }
 });
 
+// User Management Routes
+router.get('/users', checkAdmin, async (req, res) => {
+    try {
+        const users = await User.find().select('-password').sort({ createdAt: -1 });
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+router.post('/bonus-points', checkAdmin, async (req, res) => {
+    try {
+        const { userId, points, reason } = req.body;
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        user.totalPoints += parseInt(points);
+        await user.save();
+
+        // Notify user
+        const notification = new Notification({
+            user: user._id,
+            message: `Admin awarded you ${points} bonus points! Reason: ${reason}`,
+            type: 'points_earned'
+        });
+        await notification.save();
+
+        res.json({ message: 'Bonus points awarded', newTotal: user.totalPoints });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 module.exports = router;
