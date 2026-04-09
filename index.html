@@ -442,6 +442,17 @@
                         <div class="form-group" id="addressGroup" style="display: none;">
                             <label for="collectionAddress">Collection Address *</label>
                             <textarea id="collectionAddress" placeholder="Enter address for pickup" rows="3" maxlength="300"></textarea>
+                            
+                            <label for="pickupDate" style="margin-top: 15px;">Pickup Date *</label>
+                            <input type="date" id="pickupDate" min="" />
+                            
+                            <label for="pickupTime" style="margin-top: 15px;">Time Slot *</label>
+                            <select id="pickupTime">
+                                <option value="">-- Select Time Slot --</option>
+                                <option value="09:00 AM - 12:00 PM">09:00 AM - 12:00 PM</option>
+                                <option value="12:00 PM - 03:00 PM">12:00 PM - 03:00 PM</option>
+                                <option value="03:00 PM - 06:00 PM">03:00 PM - 06:00 PM</option>
+                            </select>
                         </div>
 
                         <button type="submit" class="btn btn-primary">Submit E-Waste</button>
@@ -631,6 +642,7 @@
                                     <th>User</th>
                                     <th>Item</th>
                                     <th>Weight (kg)</th>
+                                    <th>Pickup Time</th>
                                     <th>Status</th>
                                     <th>Points</th>
                                     <th>Action</th>
