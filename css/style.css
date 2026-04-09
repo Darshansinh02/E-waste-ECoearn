@@ -560,10 +560,25 @@ textarea:focus {
 }
 
 .notification-list li {
-    padding: 10px 12px;
+    padding: 12px;
     border-bottom: 1px solid #f0f0f0;
     font-size: 13px;
-    color: #333;
+    line-height: 1.4;
+}
+
+.notification-list li.unread {
+    background-color: #f0f7ff;
+    border-left: 3px solid #007bff;
+}
+
+.notification-list li.read {
+    color: #666;
+}
+
+.notif-time {
+    font-size: 11px;
+    color: #999;
+    margin-top: 4px;
 }
 
 .notification-list li:last-child {
