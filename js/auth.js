@@ -765,6 +765,10 @@ document.getElementById('submitWasteForm')?.addEventListener('submit', async fun
         pointsEarned
     };
 
+    // Find button to add loading spinner
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.classList.add('loading');
+
     try {
         await apiCall('/waste/submit', 'POST', submissionData);
         
@@ -783,6 +787,8 @@ document.getElementById('submitWasteForm')?.addEventListener('submit', async fun
         }, 3000);
     } catch (err) {
         errorDiv.textContent = err.message || 'Failed to submit waste.';
+    } finally {
+        if (submitBtn) submitBtn.classList.remove('loading');
     }
 });
 
