@@ -17,10 +17,6 @@ router.post('/submit', async (req, res) => {
 
         await submission.save();
 
-        // Update user points
-        user.totalPoints += submissionData.pointsEarned;
-        await user.save();
-
         res.status(201).json({ submission, totalPoints: user.totalPoints });
     } catch (err) {
         res.status(500).json({ message: err.message });
