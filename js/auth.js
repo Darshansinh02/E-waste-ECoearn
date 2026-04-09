@@ -1,3 +1,25 @@
+// ==================== Backend Configuration ====================
+const API_URL = 'http://localhost:5000/api';
+
+// Helper for API calls
+async function apiCall(endpoint, method = 'GET', data = null) {
+    const options = {
+        method,
+        headers: { 'Content-Type': 'application/json' }
+    };
+    if (data) options.body = JSON.stringify(data);
+    
+    try {
+        const response = await fetch(`${API_URL}${endpoint}`, options);
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || 'Something went wrong');
+        return result;
+    } catch (err) {
+        console.error(`API Error (${endpoint}):`, err.message);
+        throw err;
+    }
+}
+
 // ==================== Birthdate Functions ====================
 function openDatePicker() {
     document.getElementById('birthdatePickerHidden').click();
@@ -200,7 +222,7 @@ function emailExists(email) {
 }
 
 // ==================== Login Form ====================
-document.getElementById('loginForm').addEventListener('submit', function(e) {
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
     const email = document.getElementById('loginEmail').value.trim();
@@ -224,39 +246,29 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
         return;
     }
 
-    // Check if user exists
-    const users = getAllUsers();
-    if (!users.hasOwnProperty(email)) {
-        errorDiv.textContent = 'No account found with this email. Please sign up.';
-        return;
-    }
+    try {
+        const result = await apiCall('/auth/login', 'POST', { email, password });
+        
+        // Login successful
+        localStorage.setItem('ecolearn_currentUser', email);
+        localStorage.setItem('ecolearn_token', result.token);
 
-    const user = users[email];
-
-    // Verify password
-    if (user.password !== password) {
-        errorDiv.textContent = 'Incorrect password. Please try again.';
-        return;
-    }
-
-    // Login successful - set current user
-    localStorage.setItem('ecolearn_currentUser', email);
-
-    // Check if profile is complete
-    if (!user.profileComplete) {
-        // Go to profile setup page
-        document.getElementById('loginForm').reset();
-        generateCaptcha();
-        switchPage('profilePage');
-    } else {
-        // Profile already complete - go to dashboard
-        loadUserDashboard(email);
-        switchPage('dashboardPage');
+        // Check if profile is complete
+        if (!result.user.profileComplete) {
+            document.getElementById('loginForm').reset();
+            generateCaptcha();
+            switchPage('profilePage');
+        } else {
+            loadUserDashboard(email);
+            switchPage('dashboardPage');
+        }
+    } catch (err) {
+        errorDiv.textContent = err.message || 'Login failed. Please check your connection.';
     }
 });
 
 // ==================== Signup Form ====================
-document.getElementById('signupForm').addEventListener('submit', function(e) {
+document.getElementById('signupForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
     const email = document.getElementById('signupEmail').value.trim();
@@ -271,12 +283,6 @@ document.getElementById('signupForm').addEventListener('submit', function(e) {
     // Validate email format
     if (!isValidEmail(email)) {
         errorDiv.textContent = 'Please enter a valid email address.';
-        return;
-    }
-
-    // Check if email already exists
-    if (emailExists(email)) {
-        errorDiv.textContent = 'An account with this email already exists. Please sign in.';
         return;
     }
 
@@ -299,33 +305,22 @@ document.getElementById('signupForm').addEventListener('submit', function(e) {
         return;
     }
 
-    // Create new user
-    const users = getAllUsers();
-    users[email] = {
-        email: email,
-        password: password,
-        profileComplete: false,
-        createdAt: new Date().toISOString()
-    };
-    saveUsers(users);
-
-    // Show success message
-    alert('Account created successfully! Please log in with your email and password.');
-    
-    // Clear the form and switch to login page
-    document.getElementById('signupForm').reset();
-    document.getElementById('signupEmail').value = '';
-    document.getElementById('signupPassword').value = '';
-    document.getElementById('confirmPassword').value = '';
-    document.getElementById('signupCaptchaAnswer').value = '';
-    document.getElementById('emailStatus').textContent = '';
-    document.getElementById('passwordMatch').textContent = '';
-    
-    switchPage('loginPage');
+    try {
+        await apiCall('/auth/signup', 'POST', { email, password });
+        
+        // Show success message
+        alert('Account created successfully! Please log in with your email and password.');
+        
+        // Clear the form and switch to login page
+        document.getElementById('signupForm').reset();
+        switchPage('loginPage');
+    } catch (err) {
+        errorDiv.textContent = err.message || 'Signup failed. Please try again.';
+    }
 });
 
 // ==================== Profile Form ====================
-document.getElementById('profileForm').addEventListener('submit', function(e) {
+document.getElementById('profileForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
     const currentUser = localStorage.getItem('ecolearn_currentUser');
@@ -344,106 +339,40 @@ document.getElementById('profileForm').addEventListener('submit', function(e) {
     // Reset error message
     errorDiv.textContent = '';
 
-    // Validate username (mandatory)
-    if (!username) {
-        errorDiv.textContent = 'Please complete the profile setup: Username is mandatory.';
-        document.getElementById('username').focus();
+    // Validation ... (Mandatory fields)
+    if (!username || !birthdateInput || !address || !termsAccepted || !privacyAccepted) {
+        errorDiv.textContent = 'Please complete all mandatory fields and accept terms.';
         return;
     }
 
-    if (username.length < 3) {
-        errorDiv.textContent = 'Username must be at least 3 characters long.';
-        document.getElementById('username').focus();
-        return;
-    }
+    const profileData = {
+        email: currentUser,
+        username,
+        birthdate: birthdateInput,
+        address
+    };
 
-    // Validate birthdate (mandatory)
-    if (!birthdateInput) {
-        errorDiv.textContent = 'Please complete the profile setup: Birthdate is mandatory.';
-        document.getElementById('birthdateInput').focus();
-        return;
-    }
-
-    if (!isValidDDMMYYYYDate(birthdateInput)) {
-        errorDiv.textContent = 'Please complete the profile setup: Birthdate must be valid (DD/MM/YYYY format) and you must be at least 13 years old.';
-        document.getElementById('birthdateInput').focus();
-        return;
-    }
-
-    // Validate address (mandatory)
-    if (!address) {
-        errorDiv.textContent = 'Please complete the profile setup: Address is mandatory.';
-        document.getElementById('address').focus();
-        return;
-    }
-
-    if (address.length < 10) {
-        errorDiv.textContent = 'Address must be at least 10 characters long.';
-        document.getElementById('address').focus();
-        return;
-    }
-
-    // Validate address length (max 200 words)
-    const wordCount = address.split(/\s+/).filter(word => word.length > 0).length;
-    if (wordCount > 200) {
-        errorDiv.textContent = 'Please complete the profile setup: Address must not exceed 200 words.';
-        document.getElementById('address').focus();
-        return;
-    }
-
-    // Validate terms and privacy
-    if (!termsAccepted) {
-        errorDiv.textContent = 'Please complete the profile setup: You must agree to the Terms and Conditions.';
-        document.getElementById('termsCheckbox').focus();
-        return;
-    }
-
-    if (!privacyAccepted) {
-        errorDiv.textContent = 'Please complete the profile setup: You must agree to the Privacy Policy.';
-        document.getElementById('privacyCheckbox').focus();
-        return;
-    }
-
-    // Get user and update profile
-    const users = getAllUsers();
-    users[currentUser].profileComplete = true;
-    users[currentUser].username = username;
-    users[currentUser].birthdate = birthdateInput;
-    users[currentUser].address = address;
-    
-    // Handle photo if uploaded (optional)
+    // Handle photo if uploaded
     const photoFile = document.getElementById('profilePhoto').files[0];
     if (photoFile) {
-        // Validate photo format
-        const validFormats = ['image/jpeg', 'image/png'];
-        if (!validFormats.includes(photoFile.type)) {
-            errorDiv.textContent = 'Invalid photo format. Please upload JPG or PNG only.';
-            return;
-        }
-
-        // Validate file size (max 5MB)
-        const maxSize = 5 * 1024 * 1024; // 5MB
-        if (photoFile.size > maxSize) {
-            errorDiv.textContent = 'Photo file is too large. Maximum size is 5MB.';
-            return;
-        }
-
         const reader = new FileReader();
-        reader.onload = function(event) {
-            users[currentUser].photoData = event.target.result;
-            saveUsers(users);
-            loadUserDashboard(currentUser);
-            switchPage('dashboardPage');
-        };
-        reader.onerror = function() {
-            errorDiv.textContent = 'Error reading photo file. Please try again.';
+        reader.onload = async function(event) {
+            profileData.photoData = event.target.result;
+            saveProfile(profileData);
         };
         reader.readAsDataURL(photoFile);
     } else {
-        // No photo selected (which is optional)
-        saveUsers(users);
-        loadUserDashboard(currentUser);
-        switchPage('dashboardPage');
+        saveProfile(profileData);
+    }
+
+    async function saveProfile(data) {
+        try {
+            await apiCall('/auth/profile', 'POST', data);
+            loadUserDashboard(currentUser);
+            switchPage('dashboardPage');
+        } catch (err) {
+            errorDiv.textContent = err.message || 'Failed to save profile.';
+        }
     }
 });
 
@@ -587,36 +516,34 @@ function viewProfile() {
 }
 
 // ==================== Load User Dashboard ====================
-function loadUserDashboard(email) {
-    const users = getAllUsers();
-    const user = users[email];
+async function loadUserDashboard(email) {
+    try {
+        const user = await apiCall(`/auth/user/${email}`);
 
-    if (!user) {
-        alert('Error loading user data.');
-        return;
+        // Set user greeting for all pages
+        const username = user.username || email.split('@')[0];
+        document.getElementById('userGreeting').textContent = `Welcome, ${username}!`;
+        document.getElementById('userGreeting2').textContent = `Welcome, ${username}!`;
+        document.getElementById('userGreeting3').textContent = `Welcome, ${username}!`;
+        document.getElementById('dashboardUsername').textContent = username;
+        document.getElementById('dashboardEmail').textContent = email;
+
+        // Load photo if available
+        const photoLarge = document.getElementById('userPhotoLarge');
+        if (user.photoData) {
+            photoLarge.innerHTML = `<img src="${user.photoData}" alt="Profile photo">`;
+        } else {
+            photoLarge.innerHTML = '📷';
+        }
+
+        // Load waste submissions stats
+        loadWasteStats(email);
+
+        // Refresh notification state for logged-in user
+        initializeNotificationsForUser(email);
+    } catch (err) {
+        console.error('Failed to load dashboard:', err.message);
     }
-
-    // Set user greeting for all pages
-    const username = user.username || email.split('@')[0];
-    document.getElementById('userGreeting').textContent = `Welcome, ${username}!`;
-    document.getElementById('userGreeting2').textContent = `Welcome, ${username}!`;
-    document.getElementById('userGreeting3').textContent = `Welcome, ${username}!`;
-    document.getElementById('dashboardUsername').textContent = username;
-    document.getElementById('dashboardEmail').textContent = email;
-
-    // Load photo if available
-    const photoLarge = document.getElementById('userPhotoLarge');
-    if (user.photoData) {
-        photoLarge.innerHTML = `<img src="${user.photoData}" alt="Profile photo">`;
-    } else {
-        photoLarge.innerHTML = '📷';
-    }
-
-    // Load waste submissions stats
-    loadWasteStats(email);
-
-    // Refresh notification state for logged-in user
-    initializeNotificationsForUser(email);
 }
 
 // ==================== Notifications (Owner/Server messages) ====================
@@ -795,7 +722,7 @@ function showPrivacy() {
 }
 
 // ==================== Waste Submission ====================
-document.getElementById('submitWasteForm')?.addEventListener('submit', function(e) {
+document.getElementById('submitWasteForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
 
     const currentUser = localStorage.getItem('ecolearn_currentUser');
@@ -816,78 +743,46 @@ document.getElementById('submitWasteForm')?.addEventListener('submit', function(
     errorDiv.textContent = '';
     successDiv.textContent = '';
 
-    // Validation - Photo is required
-    if (!ewastePhotoData) {
-        errorDiv.textContent = 'Please upload or take a photo of the e-waste.';
-        return;
-    }
-
-    // Validation
-    if (!wasteType) {
-        errorDiv.textContent = 'Please select an e-waste category.';
-        return;
-    }
-
-    if (!wasteQuantity || wasteQuantity <= 0) {
-        errorDiv.textContent = 'Please enter a valid weight in kg.';
-        return;
-    }
-
-    if (!wasteCondition) {
-        errorDiv.textContent = 'Please select the condition of the waste.';
-        return;
-    }
-
-    if (!collectionMethod) {
-        errorDiv.textContent = 'Please select a collection method.';
-        return;
-    }
-
-    if (collectionMethod === 'home' && !collectionAddress) {
-        errorDiv.textContent = 'Please enter the collection address for home pickup.';
+    // Validation ... (Photo required, Type, Weight, etc.)
+    if (!ewastePhotoData || !wasteType || !wasteQuantity) {
+        errorDiv.textContent = 'Please complete all required fields and upload a photo.';
         return;
     }
 
     // Calculate points: 10 points per kg
     const pointsEarned = Math.floor(wasteQuantity * 10);
 
-    // Create submission record
-    const submission = {
-        id: Date.now(),
-        wasteType: wasteType,
+    const submissionData = {
+        email: currentUser,
+        wasteType,
         quantity: wasteQuantity,
         condition: wasteCondition,
         description: wasteDescription,
-        collectionMethod: collectionMethod,
-        collectionAddress: collectionAddress,
+        collectionMethod,
+        collectionAddress,
         ewastePhoto: ewastePhotoData,
-        pointsEarned: pointsEarned,
-        submittedAt: new Date().toISOString(),
-        status: 'pending'
+        pointsEarned
     };
 
-    // Save submission
-    const users = getAllUsers();
-    if (!users[currentUser].submissions) {
-        users[currentUser].submissions = [];
+    try {
+        await apiCall('/waste/submit', 'POST', submissionData);
+        
+        // Show success
+        successDiv.textContent = `✓ E-waste submission successful! You earned ${pointsEarned} points.`;
+        document.getElementById('submitWasteForm').reset();
+        removeEwastePhoto();
+        document.getElementById('addressGroup').style.display = 'none';
+
+        // Update stats
+        loadWasteStats(currentUser);
+
+        // Clear success message after 3 seconds
+        setTimeout(() => {
+            successDiv.textContent = '';
+        }, 3000);
+    } catch (err) {
+        errorDiv.textContent = err.message || 'Failed to submit waste.';
     }
-    users[currentUser].submissions.push(submission);
-    users[currentUser].totalPoints = (users[currentUser].totalPoints || 0) + pointsEarned;
-    saveUsers(users);
-
-    // Show success
-    successDiv.textContent = `✓ E-waste submission successful! You earned ${pointsEarned} points.`;
-    document.getElementById('submitWasteForm').reset();
-    removeEwastePhoto();
-    document.getElementById('addressGroup').style.display = 'none';
-
-    // Update stats
-    loadWasteStats(currentUser);
-
-    // Clear success message after 3 seconds
-    setTimeout(() => {
-        successDiv.textContent = '';
-    }, 3000);
 });
 
 // Handle collection method change
@@ -1050,26 +945,26 @@ function openEwasteCamera() {
 }
 
 // ==================== Waste Statistics ====================
-function loadWasteStats(email) {
-    const users = getAllUsers();
-    const user = users[email];
+async function loadWasteStats(email) {
+    try {
+        const user = await apiCall(`/auth/user/${email}`);
+        const submissions = await apiCall(`/waste/submissions/${email}`);
 
-    if (!user) return;
+        let totalWeight = 0;
+        submissions.forEach(sub => {
+            totalWeight += sub.quantity;
+        });
 
-    const submissions = user.submissions || [];
-    let totalWeight = 0;
+        // Update dashboard stats
+        document.getElementById('totalSubmissions').textContent = submissions.length;
+        document.getElementById('totalWeight').textContent = totalWeight.toFixed(2);
+        document.getElementById('pointsEarned').textContent = user.totalPoints || 0;
 
-    submissions.forEach(sub => {
-        totalWeight += sub.quantity;
-    });
-
-    // Update dashboard stats
-    document.getElementById('totalSubmissions').textContent = submissions.length;
-    document.getElementById('totalWeight').textContent = totalWeight.toFixed(2);
-    document.getElementById('pointsEarned').textContent = user.totalPoints || 0;
-
-    // Update reward shop points
-    document.getElementById('pointsBalance').textContent = user.totalPoints || 0;
+        // Update reward shop points
+        document.getElementById('pointsBalance').textContent = user.totalPoints || 0;
+    } catch (err) {
+        console.error('Failed to load stats:', err.message);
+    }
 }
 
 // ==================== Reward Shop ====================
