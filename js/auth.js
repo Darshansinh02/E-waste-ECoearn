@@ -133,6 +133,20 @@ function switchPage(pageId) {
     const targetPage = document.getElementById(pageId);
     if (targetPage) {
         targetPage.classList.add('active');
+
+        // Always reload data on page switches to ensure fresh state
+        const currentUser = localStorage.getItem('ecolearn_currentUser');
+        if (currentUser && pageId !== 'loginPage' && pageId !== 'signupPage' && pageId !== 'profilePage' && pageId !== 'adminPage') {
+            document.querySelectorAll('.user-greeting').forEach(el => {
+                const username = localStorage.getItem('ecolearn_currentUsername') || currentUser.split('@')[0];
+                el.textContent = `Welcome, ${username}!`;
+            });
+            
+            if (pageId === 'dashboardPage') loadUserDashboard(currentUser);
+            if (pageId === 'submitWastePage') loadWasteStats(currentUser);
+            if (pageId === 'rewardShopPage') loadRewardShop();
+            if (pageId === 'myRewardsPage') loadMyRewards();
+        }
     }
 
     // Update active menu links
@@ -1060,29 +1074,32 @@ function filterRewards(category) {
     loadRewardShop();
 }
 
-function loadRewardShop() {
+async function loadRewardShop() {
     const currentUser = localStorage.getItem('ecolearn_currentUser');
     if (!currentUser) return;
 
-    const users = getAllUsers();
-    const userPoints = users[currentUser].totalPoints || 0;
-    const rewardsGrid = document.getElementById('rewardsGrid');
+    try {
+        const user = await apiCall(`/auth/user/${currentUser}`);
+        const userPoints = user.totalPoints || 0;
+        
+        document.getElementById('pointsBalance').textContent = userPoints;
+        
+        const rewardsGrid = document.getElementById('rewardsGrid');
+        rewardsGrid.innerHTML = '';
 
-    rewardsGrid.innerHTML = '';
+        // Filter rewards based on category
+        const filteredRewards = currentCategoryFilter === 'all' 
+            ? rewards 
+            : rewards.filter(r => r.category === currentCategoryFilter);
 
-    // Filter rewards based on category
-    const filteredRewards = currentCategoryFilter === 'all' 
-        ? rewards 
-        : rewards.filter(r => r.category === currentCategoryFilter);
-
-    if (filteredRewards.length === 0) {
-        const emptyState = document.createElement('div');
-        emptyState.className = 'empty-state';
-        emptyState.style.cssText = 'grid-column: 1/-1; text-align: center; padding: 40px;';
-        emptyState.innerHTML = `<h3>No rewards found in this category</h3>`;
-        rewardsGrid.appendChild(emptyState);
-        return;
-    }
+        if (filteredRewards.length === 0) {
+            const emptyState = document.createElement('div');
+            emptyState.className = 'empty-state';
+            emptyState.style.cssText = 'grid-column: 1/-1; text-align: center; padding: 40px;';
+            emptyState.innerHTML = `<h3>No rewards found in this category</h3>`;
+            rewardsGrid.appendChild(emptyState);
+            return;
+        }
 
     filteredRewards.forEach(reward => {
         const canRedeem = userPoints >= reward.points;
@@ -1111,26 +1128,72 @@ function loadRewardShop() {
         `;
         rewardsGrid.appendChild(rewardCard);
     });
+    } catch (err) {
+        console.error('Error loading config:', err);
+    }
 }
 
-function redeemReward(rewardId, rewardName, points) {
+window.redeemReward = async function(rewardId, rewardName, points) {
     const currentUser = localStorage.getItem('ecolearn_currentUser');
     if (!currentUser) return;
 
-    const users = getAllUsers();
-    const userPoints = users[currentUser].totalPoints || 0;
+    if (!confirm(`Redeem ${rewardName} for ${points} points?`)) return;
 
-    if (userPoints < points) {
-        alert('You do not have enough points to redeem this reward.');
-        return;
+    try {
+        const result = await apiCall('/waste/redeem', 'POST', {
+            email: currentUser,
+            rewardName: rewardName,
+            points: points
+        });
+        
+        alert(`✓ Success! Your redemption code is: ${result.redemption.redemptionCode}\nCheck "My Rewards" for history.`);
+        loadRewardShop(); // Refresh points
+        loadWasteStats(currentUser); 
+        loadMyRewards(); // Pre-load new history
+    } catch (err) {
+        alert(err.message || 'Failed to redeem reward');
     }
+}
 
-    if (confirm(`Redeem ${rewardName} for ${points} points?`)) {
-        users[currentUser].totalPoints = userPoints - points;
-        saveUsers(users);
-        loadWasteStats(currentUser);
-        loadRewardShop();
-        alert(`✓ Reward redeemed! "${rewardName}" has been added to your account.`);
+async function loadMyRewards() {
+    const currentUser = localStorage.getItem('ecolearn_currentUser');
+    if (!currentUser) return;
+
+    try {
+        const redemptions = await apiCall(`/waste/redemptions/${currentUser}`);
+        const tableBody = document.getElementById('myRewardsTable');
+        if (!tableBody) return;
+        
+        tableBody.innerHTML = '';
+
+        if (redemptions.length === 0) {
+            tableBody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>You haven't redeemed any rewards yet.</td></tr>";
+            return;
+        }
+
+        redemptions.forEach(red => {
+            const row = document.createElement('tr');
+            
+            let statusBadge = `<span class="badge pending" style="background:#e2e3e5; color:#383d41;">${red.status}</span>`;
+            if (red.status === 'Ready for Pickup') statusBadge = `<span class="badge verified" style="background:#cce5ff; color:#004085;">Ready</span>`;
+            if (red.status === 'Shipped') statusBadge = `<span class="badge verified">Shipped ✓</span>`;
+
+            const date = new Date(red.redeemedAt).toLocaleDateString();
+
+            row.innerHTML = `
+                <td>${date}</td>
+                <td><strong>${red.rewardName}</strong></td>
+                <td>${red.pointsSpent} pts</td>
+                <td>${statusBadge}</td>
+                <td style="font-family: monospace; font-weight: bold; font-size: 14px; letter-spacing: 1px; color: #28a745;">
+                    ${red.redemptionCode}
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+
+    } catch (err) {
+        console.error('Failed to load redemptions:', err.message);
     }
 }
 

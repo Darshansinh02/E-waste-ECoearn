@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Submission = require('../models/Submission');
 const User = require('../models/User');
+const Redemption = require('../models/Redemption');
 
 // Submit Waste
 router.post('/submit', async (req, res) => {
@@ -31,6 +32,50 @@ router.get('/submissions/:email', async (req, res) => {
 
         const submissions = await Submission.find({ user: user._id }).sort({ submittedAt: -1 });
         res.json(submissions);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Redeem Reward
+router.post('/redeem', async (req, res) => {
+    try {
+        const { email, rewardName, points } = req.body;
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        if (user.totalPoints < points) {
+            return res.status(400).json({ message: 'Not enough points' });
+        }
+
+        user.totalPoints -= points;
+        await user.save();
+
+        const redemptionCode = 'ECO-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+        
+        const redemption = new Redemption({
+            user: user._id,
+            rewardName,
+            pointsSpent: points,
+            redemptionCode
+        });
+
+        await redemption.save();
+
+        res.json({ message: 'Reward redeemed successfully', redemption, totalPoints: user.totalPoints });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Get Redemptions
+router.get('/redemptions/:email', async (req, res) => {
+    try {
+        const user = await User.findOne({ email: req.params.email });
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const redemptions = await Redemption.find({ user: user._id }).sort({ redeemedAt: -1 });
+        res.json(redemptions);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
