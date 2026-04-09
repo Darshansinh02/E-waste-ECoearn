@@ -1221,12 +1221,19 @@ window.redeemReward = async function(rewardId, rewardName, points) {
         return;
     }
 
+    const phoneNumber = prompt(`Please enter your contact phone number for delivery:`);
+    if (!phoneNumber) {
+        alert('Phone number is required for shipping updates.');
+        return;
+    }
+
     try {
         const result = await apiCall('/waste/redeem', 'POST', {
             email: currentUser,
             rewardName: rewardName,
             points: points,
-            shippingAddress: shippingAddress
+            shippingAddress: shippingAddress,
+            phoneNumber: phoneNumber
         });
         
         alert(`✓ Success! We will ship your reward. Dashboard has been updated. Tracking code is: ${result.redemption.redemptionCode}`);
@@ -1407,7 +1414,10 @@ async function loadAdminClaims() {
                 <td>${date}</td>
                 <td>${cl.user ? cl.user.email : 'Unknown'}</td>
                 <td><strong>${cl.rewardName}</strong></td>
-                <td><small>${cl.shippingAddress}</small></td>
+                <td>
+                    <div style="font-size: 13px; font-weight: 500;">📍 ${cl.shippingAddress}</div>
+                    <div style="font-size: 12px; color: #28a745; margin-top: 4px;">📞 ${cl.phoneNumber}</div>
+                </td>
                 <td style="font-family: monospace;">${cl.redemptionCode}</td>
                 <td>${statusBadge}</td>
                 <td>${actionHtml}</td>
