@@ -1,7 +1,5 @@
-const express = require('express');
-const router = express.Router();
-const Submission = require('../models/Submission');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 
 // Middleware to check if user is admin (simplified for demo)
 const checkAdmin = async (req, res, next) => {
@@ -43,9 +41,25 @@ router.post('/verify', checkAdmin, async (req, res) => {
             if (user) {
                 user.totalPoints += submission.pointsEarned;
                 await user.save();
+
+                // Create Notification
+                const notification = new Notification({
+                    user: user._id,
+                    message: `Congratulations! Your ${submission.wasteType} submission was verified. You earned ${submission.pointsEarned} points!`,
+                    type: 'points_earned'
+                });
+                await notification.save();
             }
         } else if (action === 'reject') {
             submission.status = 'rejected';
+            
+            // Create Notification
+            const notification = new Notification({
+                user: submission.user,
+                message: `Sorry, your ${submission.wasteType} submission was rejected. Please contact support for details.`,
+                type: 'system'
+            });
+            await notification.save();
         } else {
             return res.status(400).json({ message: 'Invalid action' });
         }
@@ -100,6 +114,33 @@ router.get('/stats', checkAdmin, async (req, res) => {
             verifiedSubmissions,
             totalWeight: totalWeight.toFixed(2)
         });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// User routes (could be moved to a separate file, but kept here for simplicity)
+// Get user notifications
+router.get('/my-notifications/:email', async (req, res) => {
+    try {
+        const user = await User.findOne({ email: req.params.email });
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const notifications = await Notification.find({ user: user._id }).sort({ createdAt: -1 }).limit(10);
+        res.json(notifications);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Mark all as read
+router.post('/read-notifications/:email', async (req, res) => {
+    try {
+        const user = await User.findOne({ email: req.params.email });
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        await Notification.updateMany({ user: user._id, isRead: false }, { isRead: true });
+        res.json({ message: 'Notifications marked as read' });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
