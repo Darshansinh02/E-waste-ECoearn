@@ -5,7 +5,10 @@ const API_URL = 'http://localhost:5000/api';
 async function apiCall(endpoint, method = 'GET', data = null) {
     const options = {
         method,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+            'Content-Type': 'application/json',
+            'admin-email': localStorage.getItem('ecolearn_currentUser') || ''
+        }
     };
     if (data) options.body = JSON.stringify(data);
     
@@ -258,6 +261,9 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             document.getElementById('loginForm').reset();
             generateCaptcha();
             switchPage('profilePage');
+        } else if (result.user.isAdmin) {
+            loadAdminDashboard();
+            switchPage('adminPage');
         } else {
             loadUserDashboard(email);
             switchPage('dashboardPage');
@@ -1167,6 +1173,75 @@ document.getElementById('wasteDescription')?.addEventListener('input', function(
     const count = this.value.length;
     document.getElementById('descriptionCount').textContent = count;
 });
+
+// ==================== Admin Dashboard Content ====================
+async function loadAdminDashboard() {
+    try {
+        const stats = await apiCall('/admin/stats');
+        document.getElementById('adminTotalUsers').textContent = stats.totalUsers;
+        document.getElementById('adminPendingSubs').textContent = stats.pendingSubmissions;
+        document.getElementById('adminTotalWeight').textContent = stats.totalWeight;
+
+        const submissions = await apiCall('/admin/submissions');
+        const tableBody = document.getElementById('adminSubmissionsTable');
+        tableBody.innerHTML = '';
+
+        if (submissions.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No submissions found</td></tr>';
+            return;
+        }
+
+        submissions.forEach(sub => {
+            const row = document.createElement('tr');
+            
+            // Format status badge
+            let statusBadge = `<span class="badge pending">Pending</span>`;
+            if (sub.status === 'verified') statusBadge = `<span class="badge verified">Verified</span>`;
+            if (sub.status === 'rejected') statusBadge = `<span class="badge rejected">Rejected</span>`;
+
+            // Action buttons
+            let actionHtml = '';
+            if (sub.status === 'pending') {
+                actionHtml = `
+                    <button class="btn-sm btn-success" onclick="processAdminSubmission('${sub._id}', 'approve')">Approve ✓</button>
+                    <button class="btn-sm btn-danger" onclick="processAdminSubmission('${sub._id}', 'reject')">Reject ✕</button>
+                `;
+            } else {
+                actionHtml = `<span style="color: #666; font-size: 12px;">Processed</span>`;
+            }
+
+            const date = new Date(sub.submittedAt).toLocaleDateString();
+            const email = sub.user ? sub.user.email : 'Unknown User';
+
+            row.innerHTML = `
+                <td>${date}</td>
+                <td>${email}</td>
+                <td>${sub.wasteType}</td>
+                <td>${sub.quantity}</td>
+                <td>${statusBadge}</td>
+                <td>${sub.pointsEarned}</td>
+                <td>${actionHtml}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+
+    } catch (err) {
+        console.error('Failed to load admin dashboard:', err.message);
+        alert('Failed to load admin data: ' + err.message);
+    }
+}
+
+window.processAdminSubmission = async function(submissionId, action) {
+    if (!confirm(`Are you sure you want to ${action} this submission?`)) return;
+    try {
+        const result = await apiCall('/admin/verify', 'POST', { submissionId, action });
+        alert(result.message);
+        loadAdminDashboard(); // Reload data
+    } catch (err) {
+        alert('Action failed: ' + err.message);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize captchas
     generateCaptcha();
