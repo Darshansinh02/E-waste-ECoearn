@@ -1215,14 +1215,21 @@ window.redeemReward = async function(rewardId, rewardName, points) {
 
     if (!confirm(`Redeem ${rewardName} for ${points} points?`)) return;
 
+    const shippingAddress = prompt(`Please enter your full shipping address to deliver ${rewardName}:`);
+    if (!shippingAddress) {
+        alert('Shipping address is required to process the reward.');
+        return;
+    }
+
     try {
         const result = await apiCall('/waste/redeem', 'POST', {
             email: currentUser,
             rewardName: rewardName,
-            points: points
+            points: points,
+            shippingAddress: shippingAddress
         });
         
-        alert(`✓ Success! Your redemption code is: ${result.redemption.redemptionCode}\nCheck "My Rewards" for history.`);
+        alert(`✓ Success! We will ship your reward. Dashboard has been updated. Tracking code is: ${result.redemption.redemptionCode}`);
         loadRewardShop(); // Refresh points
         loadWasteStats(currentUser); 
         loadMyRewards(); // Pre-load new history
@@ -1334,8 +1341,9 @@ async function loadAdminDashboard() {
             tableBody.appendChild(row);
         });
 
-        // Also load users
+        // Also load users and claims
         await loadAdminUsers();
+        await loadAdminClaims();
 
     } catch (err) {
         console.error('Failed to load admin content:', err.message);
@@ -1345,19 +1353,88 @@ async function loadAdminDashboard() {
 function switchAdminTab(tabName) {
     const subsSection = document.getElementById('adminSubmissionsSection');
     const usersSection = document.getElementById('adminUsersSection');
+    const claimsSection = document.getElementById('adminClaimsSection');
+    
     const tabSub = document.getElementById('tabSubmissions');
     const tabUsr = document.getElementById('tabUsers');
+    const tabClaims = document.getElementById('tabClaims');
+
+    [subsSection, usersSection, claimsSection].forEach(sec => {
+        if(sec) sec.style.display = 'none';
+    });
+    [tabSub, tabUsr, tabClaims].forEach(tab => {
+        if(tab) tab.classList.remove('active');
+    });
 
     if (tabName === 'submissions') {
         subsSection.style.display = 'block';
-        usersSection.style.display = 'none';
         tabSub.classList.add('active');
-        tabUsr.classList.remove('active');
-    } else {
-        subsSection.style.display = 'none';
+    } else if (tabName === 'users') {
         usersSection.style.display = 'block';
-        tabSub.classList.remove('active');
         tabUsr.classList.add('active');
+    } else if (tabName === 'claims') {
+        claimsSection.style.display = 'block';
+        tabClaims.classList.add('active');
+    }
+}
+
+async function loadAdminClaims() {
+    try {
+        const claims = await apiCall('/admin/claims');
+        const tableBody = document.getElementById('adminClaimsTable');
+        if (!tableBody) return;
+
+        tableBody.innerHTML = '';
+
+        claims.forEach(cl => {
+            const row = document.createElement('tr');
+            const date = new Date(cl.redeemedAt).toLocaleDateString();
+            
+            let statusBadge = `<span class="badge pending">Processing</span>`;
+            if (cl.status === 'Shipped') statusBadge = `<span class="badge" style="background:#17a2b8; color:white;">Shipped</span>`;
+            if (cl.status === 'Delivered') statusBadge = `<span class="badge verified">Delivered</span>`;
+
+            let actionHtml = '';
+            if (cl.status === 'Processing') {
+                actionHtml = `<button class="btn-sm btn-success" onclick="processAdminClaim('${cl._id}', 'ship')">Mark Shipped 🚚</button>`;
+            } else if (cl.status === 'Shipped') {
+                actionHtml = `<button class="btn-sm" style="background:#007bff; color:white;" onclick="processAdminClaim('${cl._id}', 'deliver')">Mark Delivered ✓</button>`;
+            } else {
+                actionHtml = `<span style="color: #666; font-size: 12px;">Completed</span>`;
+            }
+
+            row.innerHTML = `
+                <td>${date}</td>
+                <td>${cl.user ? cl.user.email : 'Unknown'}</td>
+                <td><strong>${cl.rewardName}</strong></td>
+                <td><small>${cl.shippingAddress}</small></td>
+                <td style="font-family: monospace;">${cl.redemptionCode}</td>
+                <td>${statusBadge}</td>
+                <td>${actionHtml}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+    } catch (err) {
+        console.error('Failed to load claims:', err.message);
+    }
+}
+
+window.processAdminClaim = async function(claimId, action) {
+    let payload = { action };
+    
+    if (action === 'ship') {
+        const tracking = prompt("Enter tracking number (optional):");
+        payload.trackingNumber = tracking || '';
+    } else {
+        if (!confirm('Mark this reward as delivered?')) return;
+    }
+
+    try {
+        await apiCall(`/admin/claims/${claimId}/update`, 'POST', payload);
+        alert('Claim updated successfully!');
+        loadAdminDashboard(); // Refresh all Admin data
+    } catch (err) {
+        alert('Failed to update claim: ' + err.message);
     }
 }
 

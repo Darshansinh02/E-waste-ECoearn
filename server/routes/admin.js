@@ -3,6 +3,7 @@ const router = express.Router();
 const Submission = require('../models/Submission');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
+const Redemption = require('../models/Redemption');
 
 // Middleware to check if user is admin (simplified for demo)
 const checkAdmin = async (req, res, next) => {
@@ -177,6 +178,44 @@ router.post('/bonus-points', checkAdmin, async (req, res) => {
         await notification.save();
 
         res.json({ message: 'Bonus points awarded', newTotal: user.totalPoints });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Reward Claims Management
+router.get('/claims', checkAdmin, async (req, res) => {
+    try {
+        const claims = await Redemption.find().populate('user', 'email username').sort({ redeemedAt: -1 });
+        res.json(claims);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+router.post('/claims/:id/update', checkAdmin, async (req, res) => {
+    try {
+        const { action, trackingNumber } = req.body;
+        const claim = await Redemption.findById(req.params.id).populate('user');
+        if (!claim) return res.status(404).json({ message: 'Claim not found' });
+
+        if (action === 'ship') {
+            claim.status = 'Shipped';
+            if (trackingNumber) claim.trackingNumber = trackingNumber;
+            
+            // Notify user
+            const notification = new Notification({
+                user: claim.user._id,
+                message: `Great news! Your reward "${claim.rewardName}" has been shipped. ${trackingNumber ? 'Tracking: ' + trackingNumber : ''}`,
+                type: 'system'
+            });
+            await notification.save();
+        } else if (action === 'deliver') {
+            claim.status = 'Delivered';
+        }
+        
+        await claim.save();
+        res.json({ message: `Claim updated to ${claim.status}` });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
