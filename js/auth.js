@@ -545,7 +545,10 @@ async function loadUserDashboard(email) {
         document.getElementById('userGreeting').textContent = `Welcome, ${username}!`;
         document.getElementById('userGreeting2').textContent = `Welcome, ${username}!`;
         document.getElementById('userGreeting3').textContent = `Welcome, ${username}!`;
-        document.getElementById('dashboardUsername').textContent = username;
+        const ug4 = document.getElementById('userGreeting4');
+        if(ug4) ug4.textContent = `Welcome, ${username}!`;
+        
+        document.getElementById('dashboardUsername').innerHTML = `${username} <span id="userEcoLevel" class="eco-badge">🌱 Eco Starter</span>`;
         document.getElementById('dashboardEmail').textContent = email;
 
         // Load photo if available
@@ -937,17 +940,78 @@ async function loadWasteStats(email) {
         const submissions = await apiCall(`/waste/submissions/${email}`);
 
         let totalWeight = 0;
+        let verifiedWeight = 0;
+
         submissions.forEach(sub => {
             totalWeight += sub.quantity;
+            if (sub.status === 'verified') {
+                verifiedWeight += sub.quantity;
+            }
         });
 
-        // Update dashboard stats
+        // Update dashboard stats (Basic)
         document.getElementById('totalSubmissions').textContent = submissions.length;
         document.getElementById('totalWeight').textContent = totalWeight.toFixed(2);
-        document.getElementById('pointsEarned').textContent = user.totalPoints || 0;
+        
+        const statsDevices = document.getElementById('statsDevices');
+        if (statsDevices) statsDevices.textContent = verifiedWeight.toFixed(2) + ' kg';
+        
+        const statsPoints = document.getElementById('statsPoints');
+        if (statsPoints) statsPoints.textContent = user.totalPoints || 0;
+        
+        const statsDays = document.getElementById('statsDays');
+        if (statsDays) statsDays.textContent = submissions.length;
 
-        // Update reward shop points
+        document.getElementById('pointsEarned').textContent = user.totalPoints || 0;
         document.getElementById('pointsBalance').textContent = user.totalPoints || 0;
+
+        // ================= Eco Calculations =================
+        // 1. CO2 Saved (approx 1.4kg CO2 saved per 1kg of e-waste recycled)
+        const co2Saved = (verifiedWeight * 1.4).toFixed(1);
+        
+        // 2. Toxins Prevented (approx 50g of toxins like Lead/Mercury kept out of earth per 1kg)
+        const toxinsSaved = (verifiedWeight * 50).toFixed(0);
+        
+        // 3. Trees Planted equivalent (approx 1 tree plants worth of carbon per 10kg e-waste)
+        const treesPlanted = Math.floor(verifiedWeight / 10);
+
+        const impactCo2 = document.getElementById('impactCo2');
+        if (impactCo2) impactCo2.textContent = `${co2Saved} kg`;
+        
+        const impactToxic = document.getElementById('impactToxic');
+        if (impactToxic) impactToxic.textContent = `${toxinsSaved} g`;
+        
+        const impactTrees = document.getElementById('impactTrees');
+        if (impactTrees) impactTrees.textContent = treesPlanted;
+
+        // Level calculation based on points
+        const userPts = user.totalPoints || 0;
+        const ecoLevelBadge = document.getElementById('userEcoLevel');
+        if (ecoLevelBadge) {
+            if (userPts < 500) {
+                ecoLevelBadge.innerHTML = '🌱 Eco Starter';
+                ecoLevelBadge.style.color = '#1e8e3e';
+                ecoLevelBadge.style.backgroundColor = '#e6f4ea';
+            } else if (userPts < 2000) {
+                ecoLevelBadge.innerHTML = '🌿 Green Explorer';
+                ecoLevelBadge.style.color = '#00796b';
+                ecoLevelBadge.style.backgroundColor = '#e0f2f1';
+            } else if (userPts < 5000) {
+                ecoLevelBadge.innerHTML = '🛡️ Planet Defender';
+                ecoLevelBadge.style.color = '#0277bd';
+                ecoLevelBadge.style.backgroundColor = '#e1f5fe';
+            } else if (userPts < 10000) {
+                ecoLevelBadge.innerHTML = '🏆 Sustainability Champion';
+                ecoLevelBadge.style.color = '#e65100';
+                ecoLevelBadge.style.backgroundColor = '#fff3e0';
+            } else {
+                ecoLevelBadge.innerHTML = '🌍 Earth Guardian';
+                ecoLevelBadge.style.color = '#fff';
+                ecoLevelBadge.style.backgroundColor = 'linear-gradient(135deg, #FFD700, #F5A623)';
+                ecoLevelBadge.style.border = 'none';
+            }
+        }
+        
     } catch (err) {
         console.error('Failed to load stats:', err.message);
     }
