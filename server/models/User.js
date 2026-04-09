@@ -8,6 +8,7 @@ const UserSchema = new mongoose.Schema({
     address: { type: String },
     photoData: { type: String },
     profileComplete: { type: Boolean, default: false },
+    isAdmin: { type: Boolean, default: false },
     totalPoints: { type: Number, default: 0 },
     createdAt: { type: Date, default: Date.now }
 });
