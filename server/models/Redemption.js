@@ -5,7 +5,10 @@ const RedemptionSchema = new mongoose.Schema({
     rewardName: { type: String, required: true },
     pointsSpent: { type: Number, required: true },
     redemptionCode: { type: String, required: true },
-    status: { type: String, enum: ['Processing', 'Shipped', 'Ready for Pickup'], default: 'Processing' },
+    status: { type: String, enum: ['Processing', 'Shipped', 'Delivered', 'Cancelled'], default: 'Processing' },
+    shippingAddress: { type: String, required: true },
+    phoneNumber: { type: String, required: true },
+    trackingNumber: { type: String },
     redeemedAt: { type: Date, default: Date.now }
 });
 
