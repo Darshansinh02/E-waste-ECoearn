@@ -7,13 +7,22 @@ const Redemption = require('../models/Redemption');
 // Submit Waste
 router.post('/submit', async (req, res) => {
     try {
-        const { email, ...submissionData } = req.body;
+        const { email, wasteType, quantity, condition, description, collectionMethod, collectionAddress, pickupDate, pickupTime, ewastePhoto, pointsEarned } = req.body;
         const user = await User.findOne({ email });
         if (!user) return res.status(404).json({ message: 'User not found' });
 
         const submission = new Submission({
             user: user._id,
-            ...submissionData
+            wasteType,
+            quantity,
+            condition,
+            description,
+            collectionMethod,
+            collectionAddress,
+            pickupDate,
+            pickupTime,
+            ewastePhoto,
+            pointsEarned
         });
 
         await submission.save();
