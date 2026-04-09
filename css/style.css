@@ -1384,3 +1384,61 @@ textarea:focus {
 
 .btn-success { background: #28a745; color: white; }
 .btn-danger { background: #dc3545; color: white; }
+
+/* ==================== Sustainability Impact Dashboard ==================== */
+.eco-badge {
+    display: inline-block;
+    font-size: 14px;
+    background-color: #e6f4ea;
+    color: #1e8e3e;
+    padding: 3px 12px;
+    border-radius: 20px;
+    vertical-align: middle;
+    margin-left: 10px;
+    font-weight: bold;
+    border: 1px solid #ceead6;
+}
+
+.impact-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.impact-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    transition: transform 0.2s;
+}
+
+.impact-card:hover {
+    transform: translateY(-5px);
+}
+
+.impact-icon {
+    font-size: 36px;
+    margin-right: 20px;
+    background: rgba(0,0,0,0.05);
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.impact-info h4 {
+    margin: 0;
+    font-size: 20px;
+    color: #333;
+}
+
+.impact-info p {
+    margin: 5px 0 0;
+    font-size: 14px;
+    color: #666;
+}
