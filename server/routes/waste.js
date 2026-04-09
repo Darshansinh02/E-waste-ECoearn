@@ -49,7 +49,7 @@ router.get('/submissions/:email', async (req, res) => {
 // Redeem Reward
 router.post('/redeem', async (req, res) => {
     try {
-        const { email, rewardName, points, shippingAddress } = req.body;
+        const { email, rewardName, points, shippingAddress, phoneNumber } = req.body;
         const user = await User.findOne({ email });
         if (!user) return res.status(404).json({ message: 'User not found' });
 
@@ -57,8 +57,8 @@ router.post('/redeem', async (req, res) => {
             return res.status(400).json({ message: 'Not enough points' });
         }
 
-        if (!shippingAddress) {
-            return res.status(400).json({ message: 'Shipping address is required' });
+        if (!shippingAddress || !phoneNumber) {
+            return res.status(400).json({ message: 'Shipping address and phone number are required' });
         }
 
         user.totalPoints -= points;
@@ -71,7 +71,8 @@ router.post('/redeem', async (req, res) => {
             rewardName,
             pointsSpent: points,
             redemptionCode,
-            shippingAddress
+            shippingAddress,
+            phoneNumber
         });
 
         await redemption.save();
