@@ -726,6 +726,11 @@ document.getElementById('submitWasteForm')?.addEventListener('submit', async fun
     const wasteDescription = document.getElementById('wasteDescription').value.trim();
     const collectionMethod = document.querySelector('input[name="collectionMethod"]:checked').value;
     const collectionAddress = document.getElementById('collectionAddress').value.trim();
+    
+    // New scheduling values
+    const pickupDate = document.getElementById('pickupDate').value;
+    const pickupTime = document.getElementById('pickupTime').value;
+
     const errorDiv = document.getElementById('submitWasteError');
     const successDiv = document.getElementById('submitWasteSuccess');
 
@@ -735,6 +740,11 @@ document.getElementById('submitWasteForm')?.addEventListener('submit', async fun
     // Validation ... (Photo required, Type, Weight, etc.)
     if (!ewastePhotoData || !wasteType || !wasteQuantity) {
         errorDiv.textContent = 'Please complete all required fields and upload a photo.';
+        return;
+    }
+
+    if (collectionMethod === 'home' && (!pickupDate || !pickupTime)) {
+        errorDiv.textContent = 'Please select a Pickup Date and Time Slot for home collection.';
         return;
     }
 
@@ -749,6 +759,8 @@ document.getElementById('submitWasteForm')?.addEventListener('submit', async fun
         description: wasteDescription,
         collectionMethod,
         collectionAddress,
+        pickupDate,
+        pickupTime,
         ewastePhoto: ewastePhotoData,
         pointsEarned
     };
@@ -1280,12 +1292,18 @@ async function loadAdminDashboard() {
         tableBody.innerHTML = '';
 
         if (submissions.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No submissions found</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No submissions found</td></tr>';
             return;
         }
 
         submissions.forEach(sub => {
             const row = document.createElement('tr');
+            
+            // Format pickup schedule if applicable
+            let scheduleInfo = 'Drop Center';
+            if (sub.collectionMethod === 'home' && sub.pickupDate) {
+                 scheduleInfo = `<span style="font-size: 13px;"><b>${sub.pickupDate}</b><br>${sub.pickupTime}</span>`;
+            }
             
             // Format status badge
             let statusBadge = `<span class="badge pending">Pending</span>`;
@@ -1303,14 +1321,12 @@ async function loadAdminDashboard() {
                 actionHtml = `<span style="color: #666; font-size: 12px;">Processed</span>`;
             }
 
-            const date = new Date(sub.submittedAt).toLocaleDateString();
-            const email = sub.user ? sub.user.email : 'Unknown User';
-
             row.innerHTML = `
-                <td>${date}</td>
-                <td>${email}</td>
+                <td>${new Date(sub.submittedAt).toLocaleDateString()}</td>
+                <td>${sub.user.email}</td>
                 <td>${sub.wasteType}</td>
                 <td>${sub.quantity}</td>
+                <td>${scheduleInfo}</td>
                 <td>${statusBadge}</td>
                 <td>${sub.pointsEarned}</td>
                 <td>${actionHtml}</td>
