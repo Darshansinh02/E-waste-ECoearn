@@ -271,7 +271,7 @@
             <div class="dashboard-content">
                 <div class="user-profile-card">
                     <div class="user-photo-large" id="userPhotoLarge">📷</div>
-                    <h2 id="dashboardUsername">User</h2>
+                    <h2 id="dashboardUsername">User <span id="userEcoLevel" class="eco-badge">🌱 Eco Starter</span></h2>
                     <p id="dashboardEmail">email@example.com</p>
                     <button onclick="switchPage('profilePage')" class="btn btn-secondary">Edit Profile</button>
                 </div>
@@ -280,16 +280,43 @@
                     <h3>Your Statistics</h3>
                     <div class="stats-grid">
                         <div class="stat-card">
-                            <div class="stat-number">0</div>
+                            <div class="stat-number" id="statsDevices">0</div>
                             <div class="stat-label">Devices Recycled</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-number">0</div>
+                            <div class="stat-number" id="statsPoints">0</div>
                             <div class="stat-label">Points Earned</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-number">0</div>
-                            <div class="stat-label">Days Active</div>
+                            <div class="stat-number" id="statsDays">0</div>
+                            <div class="stat-label">Total Submissions</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-section" style="margin-top: 30px;">
+                    <h3>🌍 Sustainability Impact</h3>
+                    <div class="impact-grid">
+                        <div class="impact-card">
+                            <div class="impact-icon">☁️</div>
+                            <div class="impact-info">
+                                <h4 id="impactCo2">0 kg</h4>
+                                <p>CO₂ Saved</p>
+                            </div>
+                        </div>
+                        <div class="impact-card">
+                            <div class="impact-icon">🧪</div>
+                            <div class="impact-info">
+                                <h4 id="impactToxic">0 g</h4>
+                                <p>Toxins Prevented</p>
+                            </div>
+                        </div>
+                        <div class="impact-card" style="grid-column: 1 / -1; background: linear-gradient(135deg, #28a745, #20c997); color: white;">
+                            <div class="impact-icon">🌳</div>
+                            <div class="impact-info">
+                                <h4 style="color: white; font-size: 24px;">Equivalent to <span id="impactTrees">0</span> Trees Planted</h4>
+                                <p style="color: rgba(255,255,255,0.9);">Based on your carbon offset reduction from total e-waste recycled.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
