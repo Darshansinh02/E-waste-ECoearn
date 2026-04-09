@@ -1073,7 +1073,57 @@ function loadWasteStats(email) {
 }
 
 // ==================== Reward Shop ====================
-const rewards = [];
+const rewards = [
+    {
+        id: 1,
+        name: 'Solar LED Lamp',
+        description: 'Eco-friendly solar-powered lamp for outdoor lighting. Efficient and sustainable.',
+        points: 3000,
+        image: 'assets/rewards/solar_lamp.png'
+    },
+    {
+        id: 2,
+        name: 'High-Capacity Powerbank',
+        description: '20,000mAh portable charger with dual USB ports and fast charging capability.',
+        points: 3500,
+        image: 'assets/rewards/powerbank.png'
+    },
+    {
+        id: 3,
+        name: 'Smart Watch Pro',
+        description: 'Advanced fitness tracker with heart rate monitor, GPS, and sleep tracking features.',
+        points: 4500,
+        icon: '⌚'
+    },
+    {
+        id: 4,
+        name: 'Kitchen Mixer Grinder',
+        description: 'Powerful 750W mixer grinder with three stainless steel jars for all your kitchen needs.',
+        points: 6000,
+        image: 'assets/rewards/mixer.png'
+    },
+    {
+        id: 5,
+        name: 'Professional Microwave',
+        description: 'Modern 20L microwave oven with multiple cooking modes and defrost function.',
+        points: 9000,
+        image: 'assets/rewards/microwave.png'
+    },
+    {
+        id: 6,
+        name: 'Instant Water Heater',
+        description: 'BEE 5-star rated instant water heater with advanced safety features.',
+        points: 11000,
+        image: 'assets/rewards/water_heater.png'
+    },
+    {
+        id: 7,
+        name: 'Premium Smartphone',
+        description: 'Latest high-end smartphone with a stunning display and advanced camera system.',
+        points: 15000,
+        image: 'assets/rewards/smartphone.png'
+    }
+];
 
 function loadRewardShop() {
     const currentUser = localStorage.getItem('ecolearn_currentUser');
@@ -1108,18 +1158,23 @@ function loadRewardShop() {
         const canRedeem = userPoints >= reward.points;
         const rewardCard = document.createElement('div');
         rewardCard.className = 'reward-card';
+        
+        let rewardMedia = reward.image 
+            ? `<img src="${reward.image}" alt="${reward.name}">` 
+            : reward.icon || '🎁';
+
         rewardCard.innerHTML = `
-            <div class="reward-image">${reward.icon}</div>
+            <div class="reward-image">${rewardMedia}</div>
             <div class="reward-content">
                 <h4 class="reward-name">${reward.name}</h4>
-                <p class="reward-description">Earn this awesome reward by recycling</p>
+                <p class="reward-description">${reward.description}</p>
                 <div class="reward-points">
                     <span class="reward-points-value">${reward.points}</span> Points
                 </div>
                 <div class="reward-action">
                     <button class="btn btn-primary" ${!canRedeem ? 'disabled' : ''} 
                             onclick="redeemReward(${reward.id}, '${reward.name}', ${reward.points})">
-                        ${canRedeem ? 'Redeem' : 'Not Enough Points'}
+                        ${canRedeem ? 'Redeem Now' : 'Not Enough Points'}
                     </button>
                 </div>
             </div>
