@@ -604,7 +604,8 @@
                 </div>
                 <div class="navbar-center">
                     <ul class="nav-menu">
-                        <li><a href="#" onclick="switchPage('adminPage')" class="nav-link active">Admin Dashboard</a></li>
+                        <li><a href="#" onclick="switchAdminTab('submissions')" id="tabSubmissions" class="nav-link active">Submissions</a></li>
+                        <li><a href="#" onclick="switchAdminTab('users')" id="tabUsers" class="nav-link">User Management</a></li>
                     </ul>
                 </div>
                 <div class="navbar-right">
@@ -632,26 +633,52 @@
                     </div>
                 </div>
 
-                <div class="dashboard-section" style="margin-top: 30px;">
-                    <h3>E-Waste Submissions</h3>
-                    <div class="admin-table-container">
-                        <table class="admin-table">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>User</th>
-                                    <th>Item</th>
-                                    <th>Weight (kg)</th>
-                                    <th>Pickup Time</th>
-                                    <th>Status</th>
-                                    <th>Points</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="adminSubmissionsTable">
-                                <!-- Loaded via JS -->
-                            </tbody>
-                        </table>
+                <div id="adminSubmissionsSection" class="admin-tab-content">
+                    <div class="dashboard-section" style="margin-top: 30px;">
+                        <h3>E-Waste Submissions</h3>
+                        <div class="admin-table-container">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>User</th>
+                                        <th>Item</th>
+                                        <th>Weight (kg)</th>
+                                        <th>Pickup Time</th>
+                                        <th>Status</th>
+                                        <th>Points</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminSubmissionsTable">
+                                    <!-- Loaded via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="adminUsersSection" class="admin-tab-content" style="display: none;">
+                    <div class="dashboard-section" style="margin-top: 30px;">
+                        <h3>Platform Users</h3>
+                        <div class="admin-table-container">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Joined Date</th>
+                                        <th>Username</th>
+                                        <th>Email</th>
+                                        <th>Total Points</th>
+                                        <th>Admin?</th>
+                                        <th>Bio Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminUsersTable">
+                                    <!-- Loaded via JS -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
