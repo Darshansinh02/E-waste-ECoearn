@@ -810,6 +810,38 @@ textarea:focus {
     font-size: 14px;
 }
 
+/* Category Navigation */
+.reward-categories {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+.cat-btn {
+    padding: 10px 20px;
+    border: 2px solid #2e7d32;
+    background: white;
+    color: #2e7d32;
+    border-radius: 50px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.cat-btn:hover {
+    background: #e8f5e9;
+    transform: translateY(-2px);
+}
+
+.cat-btn.active {
+    background: #2e7d32;
+    color: white;
+    box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+}
+
 .rewards-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
