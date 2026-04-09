@@ -553,48 +553,26 @@ async function loadUserDashboard(email) {
 }
 
 // ==================== Notifications (Owner/Server messages) ====================
-function getCurrentUser() {
-    return localStorage.getItem('ecolearn_currentUser');
-}
-
-function getUserNotifications(email) {
-    const key = `ecolearn_notifications_${email}`;
-    const saved = localStorage.getItem(key);
-    if (!saved) return [];
+async function getUserNotifications(email) {
     try {
-        return JSON.parse(saved);
-    } catch (e) {
+        return await apiCall(`/admin/my-notifications/${email}`);
+    } catch (err) {
+        console.error('Failed to fetch notifications:', err.message);
         return [];
     }
 }
 
-function saveUserNotifications(email, notifications) {
-    const key = `ecolearn_notifications_${email}`;
-    localStorage.setItem(key, JSON.stringify(notifications));
-}
+// Function removed: saveUserNotifications - handled by backend
 
-function addNotification(text) {
-    const email = getCurrentUser();
-    if (!email) return;
-    const notifications = getUserNotifications(email);
-    const newItem = {
-        id: Date.now(),
-        message: text,
-        createdAt: new Date().toISOString(),
-        read: false
-    };
-    notifications.unshift(newItem);
-    saveUserNotifications(email, notifications);
-    renderNotifications(email);
-}
+// Function removed: addNotification - handled by backend admin actions
 
-function renderNotifications(email) {
-    const notifications = getUserNotifications(email);
+async function renderNotifications(email) {
+    const notifications = await getUserNotifications(email);
 
     const entries = [
-        {list: 'notificationList', badge: 'notificationBadge', empty: 'noNotifications', panel: 'notificationPanel'},
-        {list: 'notificationList2', badge: 'notificationBadge2', empty: 'noNotifications2', panel: 'notificationPanel2'},
-        {list: 'notificationList3', badge: 'notificationBadge3', empty: 'noNotifications3', panel: 'notificationPanel3'}
+        {list: 'notificationList', badge: 'notificationBadge', empty: 'noNotifications'},
+        {list: 'notificationList2', badge: 'notificationBadge2', empty: 'noNotifications2'},
+        {list: 'notificationList3', badge: 'notificationBadge3', empty: 'noNotifications3'}
     ];
 
     entries.forEach(entry => {
@@ -611,20 +589,24 @@ function renderNotifications(email) {
             badgeEl.style.display = 'none';
         } else {
             emptyEl.style.display = 'none';
-            notifications.slice(0, 10).forEach(n => {
+            notifications.forEach(n => {
                 const item = document.createElement('li');
-                item.textContent = `${new Date(n.createdAt).toLocaleString()}: ${n.message}`;
+                item.className = n.isRead ? 'read' : 'unread';
+                item.innerHTML = `
+                    <div class="notif-msg">${n.message}</div>
+                    <div class="notif-time">${new Date(n.createdAt).toLocaleString()}</div>
+                `;
                 listEl.appendChild(item);
             });
 
-            const unreadCount = notifications.filter(n => !n.read).length;
+            const unreadCount = notifications.filter(n => !n.isRead).length;
             badgeEl.textContent = unreadCount;
             badgeEl.style.display = unreadCount > 0 ? 'inline-block' : 'none';
         }
     });
 }
 
-function toggleNotificationPanel(panelId, badgeId, listId, emptyId) {
+async function toggleNotificationPanel(panelId, badgeId, listId, emptyId) {
     const panel = document.getElementById(panelId);
     if (!panel) return;
 
@@ -641,13 +623,14 @@ function toggleNotificationPanel(panelId, badgeId, listId, emptyId) {
 
     panel.style.display = 'block';
 
-    const email = getCurrentUser();
+    const email = localStorage.getItem('ecolearn_currentUser');
     if (email) {
-        renderNotifications(email);
-        const all = getUserNotifications(email);
-        all.forEach(n => (n.read = true));
-        saveUserNotifications(email, all);
-        renderNotifications(email);
+        await renderNotifications(email);
+        // Mark as read after 2 seconds of opening
+        setTimeout(async () => {
+            await apiCall(`/admin/read-notifications/${email}`, 'POST');
+            await renderNotifications(email);
+        }, 2000);
     }
 }
 
@@ -661,27 +644,10 @@ function clearNotifications() {
 
 function initializeNotificationsForUser(email) {
     renderNotifications(email);
-
-    // Simulate server/app-owner notifications for demo
-    if (!localStorage.getItem(`ecolearn_notifications_init_${email}`)) {
-        addNotification('Welcome to ECOEarn! New rewards are available in Reward Shop.');
-        addNotification('Tips from owner: Recycle old cables safely.');
-        localStorage.setItem(`ecolearn_notifications_init_${email}`, 'true');
-    }
-
-    // Poll server side every minute for updates (fake demo messages)
-    if (window.notificationPoller) {
-        clearInterval(window.notificationPoller);
-    }
-    window.notificationPoller = setInterval(() => {
-        const randomMsgs = [
-            'Server: Your last submission has been verified. Keep it up!',
-            'Owner: We have new pick-up slots available tomorrow.',
-            'Server: You earned bonus points for completing 3 submissions in a week!'
-        ];
-        const message = randomMsgs[Math.floor(Math.random() * randomMsgs.length)];
-        addNotification(message);
-    }, 60000);
+    // Real-time check every 30 seconds
+    setInterval(() => {
+        renderNotifications(email);
+    }, 30000);
 }
 
 // Close notification panels when clicking outside
