@@ -1334,11 +1334,78 @@ async function loadAdminDashboard() {
             tableBody.appendChild(row);
         });
 
+        // Also load users
+        await loadAdminUsers();
+
     } catch (err) {
-        console.error('Failed to load admin dashboard:', err.message);
-        alert('Failed to load admin data: ' + err.message);
+        console.error('Failed to load admin content:', err.message);
     }
 }
+
+function switchAdminTab(tabName) {
+    const subsSection = document.getElementById('adminSubmissionsSection');
+    const usersSection = document.getElementById('adminUsersSection');
+    const tabSub = document.getElementById('tabSubmissions');
+    const tabUsr = document.getElementById('tabUsers');
+
+    if (tabName === 'submissions') {
+        subsSection.style.display = 'block';
+        usersSection.style.display = 'none';
+        tabSub.classList.add('active');
+        tabUsr.classList.remove('active');
+    } else {
+        subsSection.style.display = 'none';
+        usersSection.style.display = 'block';
+        tabSub.classList.remove('active');
+        tabUsr.classList.add('active');
+    }
+}
+
+async function loadAdminUsers() {
+    try {
+        const users = await apiCall('/admin/users');
+        const tableBody = document.getElementById('adminUsersTable');
+        if (!tableBody) return;
+
+        tableBody.innerHTML = '';
+
+        users.forEach(user => {
+            const row = document.createElement('tr');
+            const date = new Date(user.createdAt).toLocaleDateString();
+            
+            row.innerHTML = `
+                <td>${date}</td>
+                <td>${user.username || '<i>No Profile</i>'}</td>
+                <td>${user.email}</td>
+                <td><strong>${user.totalPoints || 0}</strong></td>
+                <td>${user.isAdmin ? '✅' : '👤'}</td>
+                <td>${user.birthdate ? '✅ Set' : '❌ Incomplete'}</td>
+                <td>
+                    <button class="btn-sm" style="background:#007bff; color:white;" onclick="awardBonusPoints('${user._id}', '${user.email}')">Award Bonus +</button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+    } catch (err) {
+        console.error('Failed to load users:', err.message);
+    }
+}
+
+window.awardBonusPoints = async function(userId, email) {
+    const points = prompt(`How many bonus points for ${email}?`);
+    if (!points || isNaN(points)) return;
+
+    const reason = prompt(`Reason for award (will be shown to user):`);
+    if (!reason) return;
+
+    try {
+        const result = await apiCall('/admin/bonus-points', 'POST', { userId, points, reason });
+        alert(`✓ Done! ${points} points added. New total: ${result.newTotal}`);
+        loadAdminDashboard();
+    } catch (err) {
+        alert('Failed to award points: ' + err.message);
+    }
+};
 
 window.processAdminSubmission = async function(submissionId, action) {
     if (!confirm(`Are you sure you want to ${action} this submission?`)) return;
