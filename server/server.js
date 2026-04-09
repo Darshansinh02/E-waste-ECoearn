@@ -14,6 +14,7 @@ app.use(express.json({ limit: '10mb' }));
 // Routes Implementation
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/waste', require('./routes/waste'));
+app.use('/api/admin', require('./routes/admin'));
 
 // Database Connection
 const PORT = process.env.PORT || 5000;
