@@ -1077,6 +1077,7 @@ const rewards = [
     {
         id: 1,
         name: 'Solar LED Lamp',
+        category: 'home',
         description: 'Eco-friendly solar-powered lamp for outdoor lighting. Efficient and sustainable.',
         points: 3000,
         image: 'assets/rewards/solar_lamp.png'
@@ -1084,6 +1085,7 @@ const rewards = [
     {
         id: 2,
         name: 'High-Capacity Powerbank',
+        category: 'peripherals',
         description: '20,000mAh portable charger with dual USB ports and fast charging capability.',
         points: 3500,
         image: 'assets/rewards/powerbank.png'
@@ -1091,6 +1093,7 @@ const rewards = [
     {
         id: 3,
         name: 'Smart Watch Pro',
+        category: 'mobile',
         description: 'Advanced fitness tracker with heart rate monitor, GPS, and sleep tracking features.',
         points: 4500,
         icon: '⌚'
@@ -1098,6 +1101,7 @@ const rewards = [
     {
         id: 4,
         name: 'Kitchen Mixer Grinder',
+        category: 'home',
         description: 'Powerful 750W mixer grinder with three stainless steel jars for all your kitchen needs.',
         points: 6000,
         image: 'assets/rewards/mixer.png'
@@ -1105,6 +1109,7 @@ const rewards = [
     {
         id: 5,
         name: 'Professional Microwave',
+        category: 'home',
         description: 'Modern 20L microwave oven with multiple cooking modes and defrost function.',
         points: 9000,
         image: 'assets/rewards/microwave.png'
@@ -1112,6 +1117,7 @@ const rewards = [
     {
         id: 6,
         name: 'Instant Water Heater',
+        category: 'home',
         description: 'BEE 5-star rated instant water heater with advanced safety features.',
         points: 11000,
         image: 'assets/rewards/water_heater.png'
@@ -1119,11 +1125,73 @@ const rewards = [
     {
         id: 7,
         name: 'Premium Smartphone',
+        category: 'mobile',
         description: 'Latest high-end smartphone with a stunning display and advanced camera system.',
         points: 15000,
         image: 'assets/rewards/smartphone.png'
+    },
+    {
+        id: 8,
+        name: 'Premium Earphones',
+        category: 'audio',
+        description: 'High-quality wired earphones with deep bass and crystal clear audio quality.',
+        points: 3000,
+        icon: '🎧'
+    },
+    {
+        id: 9,
+        name: 'Wireless Headphones',
+        category: 'audio',
+        description: 'Premium noise-canceling wireless headphones for an immersive audio experience.',
+        points: 4500,
+        icon: '🎧'
+    },
+    {
+        id: 10,
+        name: 'Bluetooth Speaker',
+        category: 'audio',
+        description: 'Portable waterproof Bluetooth speaker with 360-degree sound and long battery life.',
+        points: 5500,
+        icon: '🔊'
+    },
+    {
+        id: 11,
+        name: 'Gaming Keyboard',
+        category: 'peripherals',
+        description: 'RGB mechanical gaming keyboard with fast response and tactile feedback.',
+        points: 4200,
+        icon: '⌨️'
+    },
+    {
+        id: 12,
+        name: 'Wireless Mouse',
+        category: 'peripherals',
+        description: 'Ergonomic wireless mouse with high-precision tracking and quiet clicks.',
+        points: 3200,
+        icon: '🖱️'
     }
 ];
+
+let currentCategoryFilter = 'all';
+
+function filterRewards(category) {
+    currentCategoryFilter = category;
+    
+    // Update active button state
+    document.querySelectorAll('.cat-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.textContent.toLowerCase().includes(category) || 
+            (category === 'all' && btn.textContent === 'All') ||
+            (category === 'mobile' && btn.textContent.includes('Mobile')) ||
+            (category === 'audio' && btn.textContent.includes('Speakers')) ||
+            (category === 'peripherals' && btn.textContent.includes('Peripherals')) ||
+            (category === 'home' && btn.textContent.includes('Home'))) {
+            btn.classList.add('active');
+        }
+    });
+
+    loadRewardShop();
+}
 
 function loadRewardShop() {
     const currentUser = localStorage.getItem('ecolearn_currentUser');
@@ -1135,26 +1203,21 @@ function loadRewardShop() {
 
     rewardsGrid.innerHTML = '';
 
-    if (rewards.length === 0) {
+    // Filter rewards based on category
+    const filteredRewards = currentCategoryFilter === 'all' 
+        ? rewards 
+        : rewards.filter(r => r.category === currentCategoryFilter);
+
+    if (filteredRewards.length === 0) {
         const emptyState = document.createElement('div');
-        emptyState.style.cssText = `
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 60px 30px;
-            background: #f5f5f5;
-            border-radius: 12px;
-            color: #666;
-        `;
-        emptyState.innerHTML = `
-            <h3 style="font-size: 24px; margin-bottom: 15px; color: #333;">🎁 No Rewards Available</h3>
-            <p style="font-size: 16px; margin-bottom: 20px;">Rewards will be added soon!</p>
-            <p style="font-size: 14px; color: #888;">Current Points: <strong style="color: #2e7d32; font-size: 18px;">${userPoints}</strong></p>
-        `;
+        emptyState.className = 'empty-state';
+        emptyState.style.cssText = 'grid-column: 1/-1; text-align: center; padding: 40px;';
+        emptyState.innerHTML = `<h3>No rewards found in this category</h3>`;
         rewardsGrid.appendChild(emptyState);
         return;
     }
 
-    rewards.forEach(reward => {
+    filteredRewards.forEach(reward => {
         const canRedeem = userPoints >= reward.points;
         const rewardCard = document.createElement('div');
         rewardCard.className = 'reward-card';
