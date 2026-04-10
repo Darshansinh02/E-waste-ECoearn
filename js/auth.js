@@ -1059,7 +1059,7 @@ const rewards = [
         category: 'mobile',
         description: 'Advanced fitness tracker with heart rate monitor, GPS, and sleep tracking features.',
         points: 4500,
-        icon: '⌚'
+        image: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&q=80&w=400'
     },
     {
         id: 4,
@@ -1099,7 +1099,7 @@ const rewards = [
         category: 'audio',
         description: 'High-quality wired earphones with deep bass and crystal clear audio quality.',
         points: 3000,
-        icon: '🎧'
+        image: 'https://images.unsplash.com/photo-1606220588913-b3aacb4d2f46?auto=format&fit=crop&q=80&w=400'
     },
     {
         id: 9,
@@ -1107,7 +1107,7 @@ const rewards = [
         category: 'audio',
         description: 'Premium noise-canceling wireless headphones for an immersive audio experience.',
         points: 4500,
-        icon: '🎧'
+        image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=400'
     },
     {
         id: 10,
@@ -1115,7 +1115,7 @@ const rewards = [
         category: 'audio',
         description: 'Portable waterproof Bluetooth speaker with 360-degree sound and long battery life.',
         points: 5500,
-        icon: '🔊'
+        image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&q=80&w=400'
     },
     {
         id: 11,
@@ -1123,7 +1123,7 @@ const rewards = [
         category: 'peripherals',
         description: 'RGB mechanical gaming keyboard with fast response and tactile feedback.',
         points: 4200,
-        icon: '⌨️'
+        image: 'https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&q=80&w=400'
     },
     {
         id: 12,
@@ -1131,7 +1131,7 @@ const rewards = [
         category: 'peripherals',
         description: 'Ergonomic wireless mouse with high-precision tracking and quiet clicks.',
         points: 3200,
-        icon: '🖱️'
+        image: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&q=80&w=400'
     }
 ];
 
