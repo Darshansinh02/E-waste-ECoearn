@@ -6,13 +6,13 @@ async function apiCall(endpoint, method = 'GET', data = null) {
     const token = localStorage.getItem('ecolearn_token');
     const options = {
         method,
-        headers: { 
+        headers: {
             'Content-Type': 'application/json',
             ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         }
     };
     if (data) options.body = JSON.stringify(data);
-    
+
     try {
         const response = await fetch(`${API_URL}${endpoint}`, options);
         const result = await response.json();
@@ -42,37 +42,37 @@ function formatDDMMYYYYToDate(ddmmyyyy) {
     // ddmmyyyy format: DD/MM/YYYY
     const parts = ddmmyyyy.split('/');
     if (parts.length !== 3) return null;
-    
+
     const day = parts[0];
     const month = parts[1];
     const year = parts[2];
-    
+
     // Validate format
     if (!/^\d{2}$/.test(day) || !/^\d{2}$/.test(month) || !/^\d{4}$/.test(year)) {
         return null;
     }
-    
+
     return new Date(year, month - 1, day);
 }
 
 function isValidDDMMYYYYDate(ddmmyyyy) {
     const date = formatDDMMYYYYToDate(ddmmyyyy);
     if (!date || isNaN(date.getTime())) return false;
-    
+
     // Check if person is at least 13 years old
     const today = new Date();
     const age = today.getFullYear() - date.getFullYear();
     const monthDiff = today.getMonth() - date.getMonth();
-    
+
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < date.getDate())) {
         return age - 1 >= 13;
     }
-    
+
     return age >= 13 && date <= today;
 }
 
 // Handle date picker selection
-document.getElementById('birthdatePickerHidden').addEventListener('change', function() {
+document.getElementById('birthdatePickerHidden').addEventListener('change', function () {
     const selectedDate = this.value;
     if (selectedDate) {
         const formattedDate = formatDateToDDMMYYYY(selectedDate);
@@ -82,11 +82,11 @@ document.getElementById('birthdatePickerHidden').addEventListener('change', func
 });
 
 // Handle manual input validation
-document.getElementById('birthdateInput').addEventListener('blur', function() {
+document.getElementById('birthdateInput').addEventListener('blur', function () {
     validateBirthdateField();
 });
 
-document.getElementById('birthdateInput').addEventListener('input', function() {
+document.getElementById('birthdateInput').addEventListener('input', function () {
     // Auto-format: DD/MM/YYYY
     let value = this.value.replace(/\D/g, '');
     if (value.length >= 2) {
@@ -102,12 +102,12 @@ function validateBirthdateField() {
     const birthdateInput = document.getElementById('birthdateInput');
     const birthdateStatus = document.getElementById('birthdateStatus');
     const value = birthdateInput.value.trim();
-    
+
     if (!value) {
         birthdateStatus.textContent = '';
         return;
     }
-    
+
     if (isValidDDMMYYYYDate(value)) {
         birthdateStatus.textContent = '✓ Valid birthdate';
         birthdateStatus.classList.remove('error');
@@ -142,7 +142,7 @@ function switchPage(pageId) {
                 const username = localStorage.getItem('ecolearn_currentUsername') || currentUser.split('@')[0];
                 el.textContent = `Welcome, ${username}!`;
             });
-            
+
             if (pageId === 'dashboardPage') loadUserDashboard(currentUser);
             if (pageId === 'submitWastePage') loadWasteStats(currentUser);
             if (pageId === 'rewardShopPage') loadRewardShop();
@@ -189,7 +189,7 @@ function generateCaptcha() {
     loginCaptchaNum1 = Math.floor(Math.random() * 10);
     loginCaptchaNum2 = Math.floor(Math.random() * 10);
     loginCaptchaAnswer = loginCaptchaNum1 + loginCaptchaNum2;
-    
+
     document.getElementById('captchaQuestion').textContent = `${loginCaptchaNum1} + ${loginCaptchaNum2} = ?`;
     document.getElementById('captchaAnswer').value = '';
     document.getElementById('captchaCheck').classList.remove('show');
@@ -199,7 +199,7 @@ function generateSignupCaptcha() {
     signupCaptchaNum1 = Math.floor(Math.random() * 10);
     signupCaptchaNum2 = Math.floor(Math.random() * 10);
     signupCaptchaAnswer = signupCaptchaNum1 + signupCaptchaNum2;
-    
+
     document.getElementById('signupCaptchaQuestion').textContent = `${signupCaptchaNum1} + ${signupCaptchaNum2} = ?`;
     document.getElementById('signupCaptchaAnswer').value = '';
     document.getElementById('signupCaptchaCheck').classList.remove('show');
@@ -240,7 +240,7 @@ function emailExists(email) {
 }
 
 // ==================== Login Form ====================
-document.getElementById('loginForm').addEventListener('submit', async function(e) {
+document.getElementById('loginForm').addEventListener('submit', async function (e) {
     e.preventDefault();
 
     const email = document.getElementById('loginEmail').value.trim();
@@ -266,7 +266,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 
     try {
         const result = await apiCall('/auth/login', 'POST', { email, password });
-        
+
         // Login successful
         localStorage.setItem('ecolearn_currentUser', email);
         localStorage.setItem('ecolearn_token', result.token);
@@ -289,7 +289,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 });
 
 // ==================== Signup Form ====================
-document.getElementById('signupForm').addEventListener('submit', async function(e) {
+document.getElementById('signupForm').addEventListener('submit', async function (e) {
     e.preventDefault();
 
     const email = document.getElementById('signupEmail').value.trim();
@@ -328,10 +328,10 @@ document.getElementById('signupForm').addEventListener('submit', async function(
 
     try {
         await apiCall('/auth/signup', 'POST', { email, password });
-        
+
         // Show success message
         alert('Account created successfully! Please log in with your email and password.');
-        
+
         // Clear the form and switch to login page
         document.getElementById('signupForm').reset();
         switchPage('loginPage');
@@ -341,7 +341,7 @@ document.getElementById('signupForm').addEventListener('submit', async function(
 });
 
 // ==================== Profile Form ====================
-document.getElementById('profileForm').addEventListener('submit', async function(e) {
+document.getElementById('profileForm').addEventListener('submit', async function (e) {
     e.preventDefault();
 
     const currentUser = localStorage.getItem('ecolearn_currentUser');
@@ -377,7 +377,7 @@ document.getElementById('profileForm').addEventListener('submit', async function
     const photoFile = document.getElementById('profilePhoto').files[0];
     if (photoFile) {
         const reader = new FileReader();
-        reader.onload = async function(event) {
+        reader.onload = async function (event) {
             profileData.photoData = event.target.result;
             saveProfile(profileData);
         };
@@ -398,10 +398,10 @@ document.getElementById('profileForm').addEventListener('submit', async function
 });
 
 // ==================== Photo Upload Handler ====================
-document.getElementById('profilePhoto').addEventListener('change', function(e) {
+document.getElementById('profilePhoto').addEventListener('change', function (e) {
     const file = e.target.files[0];
     const photoStatus = document.getElementById('photoStatus');
-    
+
     if (file) {
         // Validate format
         const validFormats = ['image/jpeg', 'image/png'];
@@ -425,7 +425,7 @@ document.getElementById('profilePhoto').addEventListener('change', function(e) {
 
         // Show preview
         const reader = new FileReader();
-        reader.onload = function(event) {
+        reader.onload = function (event) {
             const preview = document.getElementById('photoPreview');
             preview.innerHTML = `<img src="${event.target.result}" alt="Profile photo">`;
             photoStatus.textContent = '✓ Photo uploaded successfully (JPG/PNG)';
@@ -437,7 +437,7 @@ document.getElementById('profilePhoto').addEventListener('change', function(e) {
 });
 
 // ==================== Address Word Counter ====================
-document.getElementById('address').addEventListener('input', function() {
+document.getElementById('address').addEventListener('input', function () {
     const address = this.value.trim();
     const wordCount = address.split(/\s+/).filter(word => word.length > 0).length;
     document.getElementById('wordCount').textContent = Math.min(wordCount, 200);
@@ -456,7 +456,7 @@ document.getElementById('address').addEventListener('input', function() {
 });
 
 // ==================== Password Match Validator ====================
-document.getElementById('confirmPassword').addEventListener('input', function() {
+document.getElementById('confirmPassword').addEventListener('input', function () {
     const password = document.getElementById('signupPassword').value;
     const confirmPassword = this.value;
     const hint = document.getElementById('passwordMatch');
@@ -475,7 +475,7 @@ document.getElementById('confirmPassword').addEventListener('input', function() 
 });
 
 // ==================== Email Existence Checker ====================
-document.getElementById('signupEmail').addEventListener('blur', function() {
+document.getElementById('signupEmail').addEventListener('blur', function () {
     const email = this.value.trim();
     const hint = document.getElementById('emailStatus');
 
@@ -503,7 +503,7 @@ document.getElementById('signupEmail').addEventListener('blur', function() {
 });
 
 // ==================== Real-time Captcha Validation ====================
-document.getElementById('captchaAnswer').addEventListener('input', function() {
+document.getElementById('captchaAnswer').addEventListener('input', function () {
     const answer = parseInt(this.value);
     const check = document.getElementById('captchaCheck');
 
@@ -514,7 +514,7 @@ document.getElementById('captchaAnswer').addEventListener('input', function() {
     }
 });
 
-document.getElementById('signupCaptchaAnswer').addEventListener('input', function() {
+document.getElementById('signupCaptchaAnswer').addEventListener('input', function () {
     const answer = parseInt(this.value);
     const check = document.getElementById('signupCaptchaCheck');
 
@@ -547,8 +547,8 @@ async function loadUserDashboard(email) {
         document.getElementById('userGreeting2').textContent = `Welcome, ${username}!`;
         document.getElementById('userGreeting3').textContent = `Welcome, ${username}!`;
         const ug4 = document.getElementById('userGreeting4');
-        if(ug4) ug4.textContent = `Welcome, ${username}!`;
-        
+        if (ug4) ug4.textContent = `Welcome, ${username}!`;
+
         document.getElementById('dashboardUsername').innerHTML = `${username} <span id="userEcoLevel" class="eco-badge">🌱 Eco Starter</span>`;
         document.getElementById('dashboardEmail').textContent = email;
 
@@ -591,9 +591,9 @@ async function renderNotifications(email) {
     const notifications = await getUserNotifications(email);
 
     const entries = [
-        {list: 'notificationList', badge: 'notificationBadge', empty: 'noNotifications'},
-        {list: 'notificationList2', badge: 'notificationBadge2', empty: 'noNotifications2'},
-        {list: 'notificationList3', badge: 'notificationBadge3', empty: 'noNotifications3'}
+        { list: 'notificationList', badge: 'notificationBadge', empty: 'noNotifications' },
+        { list: 'notificationList2', badge: 'notificationBadge2', empty: 'noNotifications2' },
+        { list: 'notificationList3', badge: 'notificationBadge3', empty: 'noNotifications3' }
     ];
 
     entries.forEach(entry => {
@@ -672,7 +672,7 @@ function initializeNotificationsForUser(email) {
 }
 
 // Close notification panels when clicking outside
-window.addEventListener('click', function(e) {
+window.addEventListener('click', function (e) {
     if (!e.target.closest('.notification-container')) {
         ['notificationPanel', 'notificationPanel2', 'notificationPanel3'].forEach(id => {
             const p = document.getElementById(id);
@@ -717,7 +717,7 @@ function showPrivacy() {
 }
 
 // ==================== Waste Submission ====================
-document.getElementById('submitWasteForm')?.addEventListener('submit', async function(e) {
+document.getElementById('submitWasteForm')?.addEventListener('submit', async function (e) {
     e.preventDefault();
 
     const currentUser = localStorage.getItem('ecolearn_currentUser');
@@ -732,7 +732,7 @@ document.getElementById('submitWasteForm')?.addEventListener('submit', async fun
     const wasteDescription = document.getElementById('wasteDescription').value.trim();
     const collectionMethod = document.querySelector('input[name="collectionMethod"]:checked').value;
     const collectionAddress = document.getElementById('collectionAddress').value.trim();
-    
+
     // New scheduling values
     const pickupDate = document.getElementById('pickupDate').value;
     const pickupTime = document.getElementById('pickupTime').value;
@@ -754,17 +754,17 @@ document.getElementById('submitWasteForm')?.addEventListener('submit', async fun
         return;
     }
     // Calculate base points based on e-waste category:
-    let basePoints = 10;
+    let basePoints = 5000;
     if (wasteType === 'laptop') {
-        basePoints = 30;
+        basePoints = 6000;
     } else if (wasteType === 'monitor' || wasteType === 'printer') {
-        basePoints = 20;
+        basePoints = 4000;
     } else if (wasteType === 'mobile' || wasteType === 'tablet') {
-        basePoints = 15;
+        basePoints = 3000;
     } else if (wasteType === 'keyboard' || wasteType === 'mouse' || wasteType === 'charger') {
-        basePoints = 5;
+        basePoints = 1500;
     } else {
-        basePoints = 10; // other / default
+        basePoints = 2000; // other / default
     }
 
     // Apply multipliers based on e-waste condition:
@@ -801,7 +801,7 @@ document.getElementById('submitWasteForm')?.addEventListener('submit', async fun
 
     try {
         await apiCall('/waste/submit', 'POST', submissionData);
-        
+
         // Show success
         successDiv.textContent = `✓ E-waste submission successful! You earned ${pointsEarned} points.`;
         document.getElementById('submitWasteForm').reset();
@@ -823,14 +823,14 @@ document.getElementById('submitWasteForm')?.addEventListener('submit', async fun
 });
 
 // Handle collection method change
-document.getElementById('homePickup')?.addEventListener('change', function() {
+document.getElementById('homePickup')?.addEventListener('change', function () {
     if (this.checked) {
         document.getElementById('addressGroup').style.display = 'block';
         document.getElementById('collectionAddress').required = true;
     }
 });
 
-document.getElementById('dropCenter')?.addEventListener('change', function() {
+document.getElementById('dropCenter')?.addEventListener('change', function () {
     if (this.checked) {
         document.getElementById('addressGroup').style.display = 'none';
         document.getElementById('collectionAddress').required = false;
@@ -842,7 +842,7 @@ document.getElementById('dropCenter')?.addEventListener('change', function() {
 let ewastePhotoData = null;
 
 // Handle e-waste photo upload
-document.getElementById('ewastePhotoUpload')?.addEventListener('change', function(e) {
+document.getElementById('ewastePhotoUpload')?.addEventListener('change', function (e) {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -858,7 +858,7 @@ document.getElementById('ewastePhotoUpload')?.addEventListener('change', functio
     }
 
     const reader = new FileReader();
-    reader.onload = function(event) {
+    reader.onload = function (event) {
         ewastePhotoData = event.target.result;
         displayEwastePhotoPreview(event.target.result);
     };
@@ -1000,13 +1000,13 @@ async function loadWasteStats(email) {
         // Update dashboard stats (Basic)
         document.getElementById('totalSubmissions').textContent = submissions.length;
         document.getElementById('totalWeight').textContent = totalWeight.toFixed(0);
-        
+
         const statsDevices = document.getElementById('statsDevices');
         if (statsDevices) statsDevices.textContent = verifiedWeight.toFixed(0) + ' units';
-        
+
         const statsPoints = document.getElementById('statsPoints');
         if (statsPoints) statsPoints.textContent = user.totalPoints || 0;
-        
+
         const statsDays = document.getElementById('statsDays');
         if (statsDays) statsDays.textContent = submissions.length;
 
@@ -1026,7 +1026,7 @@ async function loadWasteStats(email) {
                     if (sub.collectionMethod === 'home' && sub.pickupDate) {
                         scheduleInfo = `${sub.pickupDate} (${sub.pickupTime})`;
                     }
-                    
+
                     let statusBadge = `<span class="badge pending">Pending</span>`;
                     if (sub.status === 'verified') statusBadge = `<span class="badge verified">Verified</span>`;
                     if (sub.status === 'rejected') statusBadge = `<span class="badge rejected">Rejected</span>`;
@@ -1049,19 +1049,19 @@ async function loadWasteStats(email) {
         // ================= Eco Calculations =================
         // 1. CO2 Saved (approx 1.4kg CO2 saved per 1 unit of e-waste recycled)
         const co2Saved = (verifiedWeight * 1.4).toFixed(1);
-        
+
         // 2. Toxins Prevented (approx 50g of toxins like Lead/Mercury kept out of earth per 1 unit)
         const toxinsSaved = (verifiedWeight * 50).toFixed(0);
-        
+
         // 3. Trees Planted equivalent (approx 1 tree plants worth of carbon per 10 units of e-waste)
         const treesPlanted = Math.floor(verifiedWeight / 10);
 
         const impactCo2 = document.getElementById('impactCo2');
         if (impactCo2) impactCo2.textContent = `${co2Saved} kg`;
-        
+
         const impactToxic = document.getElementById('impactToxic');
         if (impactToxic) impactToxic.textContent = `${toxinsSaved} g`;
-        
+
         const impactTrees = document.getElementById('impactTrees');
         if (impactTrees) impactTrees.textContent = treesPlanted;
 
@@ -1096,7 +1096,7 @@ async function loadWasteStats(email) {
                 ecoLevelBadge.style.border = 'none';
             }
         }
-        
+
     } catch (err) {
         console.error('Failed to load stats:', err.message);
     }
@@ -1206,11 +1206,11 @@ let currentCategoryFilter = 'all';
 
 function filterRewards(category) {
     currentCategoryFilter = category;
-    
+
     // Update active button state
     document.querySelectorAll('.cat-btn').forEach(btn => {
         btn.classList.remove('active');
-        if (btn.textContent.toLowerCase().includes(category) || 
+        if (btn.textContent.toLowerCase().includes(category) ||
             (category === 'all' && btn.textContent === 'All') ||
             (category === 'mobile' && btn.textContent.includes('Mobile')) ||
             (category === 'audio' && btn.textContent.includes('Speakers')) ||
@@ -1230,15 +1230,15 @@ async function loadRewardShop() {
     try {
         const user = await apiCall(`/auth/user/${currentUser}`);
         const userPoints = user.totalPoints || 0;
-        
+
         document.getElementById('pointsBalance').textContent = userPoints;
-        
+
         const rewardsGrid = document.getElementById('rewardsGrid');
         rewardsGrid.innerHTML = '';
 
         // Filter rewards based on category
-        const filteredRewards = currentCategoryFilter === 'all' 
-            ? rewards 
+        const filteredRewards = currentCategoryFilter === 'all'
+            ? rewards
             : rewards.filter(r => r.category === currentCategoryFilter);
 
         if (filteredRewards.length === 0) {
@@ -1250,16 +1250,16 @@ async function loadRewardShop() {
             return;
         }
 
-    filteredRewards.forEach(reward => {
-        const canRedeem = userPoints >= reward.points;
-        const rewardCard = document.createElement('div');
-        rewardCard.className = 'reward-card';
-        
-        let rewardMedia = reward.image 
-            ? `<img src="${reward.image}" alt="${reward.name}">` 
-            : reward.icon || '🎁';
+        filteredRewards.forEach(reward => {
+            const canRedeem = userPoints >= reward.points;
+            const rewardCard = document.createElement('div');
+            rewardCard.className = 'reward-card';
 
-        rewardCard.innerHTML = `
+            let rewardMedia = reward.image
+                ? `<img src="${reward.image}" alt="${reward.name}">`
+                : reward.icon || '🎁';
+
+            rewardCard.innerHTML = `
             <div class="reward-image">${rewardMedia}</div>
             <div class="reward-content">
                 <h4 class="reward-name">${reward.name}</h4>
@@ -1275,14 +1275,14 @@ async function loadRewardShop() {
                 </div>
             </div>
         `;
-        rewardsGrid.appendChild(rewardCard);
-    });
+            rewardsGrid.appendChild(rewardCard);
+        });
     } catch (err) {
         console.error('Error loading config:', err);
     }
 }
 
-window.redeemReward = async function(rewardId, rewardName, points) {
+window.redeemReward = async function (rewardId, rewardName, points) {
     const currentUser = localStorage.getItem('ecolearn_currentUser');
     if (!currentUser) return;
 
@@ -1308,10 +1308,10 @@ window.redeemReward = async function(rewardId, rewardName, points) {
             shippingAddress: shippingAddress,
             phoneNumber: phoneNumber
         });
-        
+
         alert(`✓ Success! We will ship your reward. Dashboard has been updated. Tracking code is: ${result.redemption.redemptionCode}`);
         loadRewardShop(); // Refresh points
-        loadWasteStats(currentUser); 
+        loadWasteStats(currentUser);
         loadMyRewards(); // Pre-load new history
     } catch (err) {
         alert(err.message || 'Failed to redeem reward');
@@ -1326,7 +1326,7 @@ async function loadMyRewards() {
         const redemptions = await apiCall(`/waste/redemptions/${currentUser}`);
         const tableBody = document.getElementById('myRewardsTable');
         if (!tableBody) return;
-        
+
         tableBody.innerHTML = '';
 
         if (redemptions.length === 0) {
@@ -1336,7 +1336,7 @@ async function loadMyRewards() {
 
         redemptions.forEach(red => {
             const row = document.createElement('tr');
-            
+
             let statusBadge = `<span class="badge pending" style="background:#e2e3e5; color:#383d41;">${red.status}</span>`;
             if (red.status === 'Ready for Pickup') statusBadge = `<span class="badge verified" style="background:#cce5ff; color:#004085;">Ready</span>`;
             if (red.status === 'Shipped') statusBadge = `<span class="badge verified">Shipped ✓</span>`;
@@ -1361,7 +1361,7 @@ async function loadMyRewards() {
 }
 
 // ==================== Description Counter ====================
-document.getElementById('wasteDescription')?.addEventListener('input', function() {
+document.getElementById('wasteDescription')?.addEventListener('input', function () {
     const count = this.value.length;
     document.getElementById('descriptionCount').textContent = count;
 });
@@ -1386,13 +1386,13 @@ async function loadAdminDashboard() {
 
         submissions.forEach(sub => {
             const row = document.createElement('tr');
-            
+
             // Format pickup schedule if applicable
             let scheduleInfo = 'Drop Center';
             if (sub.collectionMethod === 'home' && sub.pickupDate) {
-                 scheduleInfo = `<span style="font-size: 13px;"><b>${sub.pickupDate}</b><br>${sub.pickupTime}</span>`;
+                scheduleInfo = `<span style="font-size: 13px;"><b>${sub.pickupDate}</b><br>${sub.pickupTime}</span>`;
             }
-            
+
             // Format status badge
             let statusBadge = `<span class="badge pending">Pending</span>`;
             if (sub.status === 'verified') statusBadge = `<span class="badge verified">Verified</span>`;
@@ -1438,16 +1438,16 @@ function switchAdminTab(tabName) {
     const subsSection = document.getElementById('adminSubmissionsSection');
     const usersSection = document.getElementById('adminUsersSection');
     const claimsSection = document.getElementById('adminClaimsSection');
-    
+
     const tabSub = document.getElementById('tabSubmissions');
     const tabUsr = document.getElementById('tabUsers');
     const tabClaims = document.getElementById('tabClaims');
 
     [subsSection, usersSection, claimsSection].forEach(sec => {
-        if(sec) sec.style.display = 'none';
+        if (sec) sec.style.display = 'none';
     });
     [tabSub, tabUsr, tabClaims].forEach(tab => {
-        if(tab) tab.classList.remove('active');
+        if (tab) tab.classList.remove('active');
     });
 
     if (tabName === 'submissions') {
@@ -1473,7 +1473,7 @@ async function loadAdminClaims() {
         claims.forEach(cl => {
             const row = document.createElement('tr');
             const date = new Date(cl.redeemedAt).toLocaleDateString();
-            
+
             let statusBadge = `<span class="badge pending">Processing</span>`;
             if (cl.status === 'Shipped') statusBadge = `<span class="badge" style="background:#17a2b8; color:white;">Shipped</span>`;
             if (cl.status === 'Delivered') statusBadge = `<span class="badge verified">Delivered</span>`;
@@ -1506,9 +1506,9 @@ async function loadAdminClaims() {
     }
 }
 
-window.processAdminClaim = async function(claimId, action) {
+window.processAdminClaim = async function (claimId, action) {
     let payload = { action };
-    
+
     if (action === 'ship') {
         const tracking = prompt("Enter tracking number (optional):");
         payload.trackingNumber = tracking || '';
@@ -1536,7 +1536,7 @@ async function loadAdminUsers() {
         users.forEach(user => {
             const row = document.createElement('tr');
             const date = new Date(user.createdAt).toLocaleDateString();
-            
+
             row.innerHTML = `
                 <td>${date}</td>
                 <td>${user.username || '<i>No Profile</i>'}</td>
@@ -1555,7 +1555,7 @@ async function loadAdminUsers() {
     }
 }
 
-window.awardBonusPoints = async function(userId, email) {
+window.awardBonusPoints = async function (userId, email) {
     const points = prompt(`How many bonus points for ${email}?`);
     if (!points || isNaN(points)) return;
 
@@ -1571,7 +1571,7 @@ window.awardBonusPoints = async function(userId, email) {
     }
 };
 
-window.processAdminSubmission = async function(submissionId, action) {
+window.processAdminSubmission = async function (submissionId, action) {
     if (!confirm(`Are you sure you want to ${action} this submission?`)) return;
     try {
         const result = await apiCall('/admin/verify', 'POST', { submissionId, action });
@@ -1582,7 +1582,7 @@ window.processAdminSubmission = async function(submissionId, action) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Initialize captchas
     generateCaptcha();
     generateSignupCaptcha();
@@ -1613,7 +1613,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ==================== Photo Lightbox Modal Helper Functions ====================
-window.viewAdminSubmissionPhoto = function(subId) {
+window.viewAdminSubmissionPhoto = function (subId) {
     const sub = window.adminSubmissions?.find(s => s._id === subId);
     if (sub && sub.ewastePhoto) {
         showPhotoModal(sub.ewastePhoto, `${sub.user?.username || 'User'}'s ${sub.wasteType}`);
@@ -1622,7 +1622,7 @@ window.viewAdminSubmissionPhoto = function(subId) {
     }
 };
 
-window.viewUserSubmissionPhoto = function(subId) {
+window.viewUserSubmissionPhoto = function (subId) {
     const sub = window.userSubmissions?.find(s => s._id === subId);
     if (sub && sub.ewastePhoto) {
         showPhotoModal(sub.ewastePhoto, `Your Submitted ${sub.wasteType}`);
@@ -1650,13 +1650,13 @@ function showPhotoModal(imgSrc, title) {
         `;
         document.body.appendChild(modal);
     }
-    
+
     document.getElementById('photoModalTitle').textContent = title || 'E-Waste Photo';
     document.getElementById('photoModalImg').src = imgSrc;
     modal.style.display = 'flex';
 }
 
-window.closePhotoModal = function() {
+window.closePhotoModal = function () {
     const modal = document.getElementById('photoInspectionModal');
     if (modal) {
         modal.style.display = 'none';
@@ -1665,7 +1665,7 @@ window.closePhotoModal = function() {
 };
 
 // Close when clicking outside of the modal content
-window.addEventListener('click', function(event) {
+window.addEventListener('click', function (event) {
     const modal = document.getElementById('photoInspectionModal');
     if (event.target === modal) {
         closePhotoModal();
@@ -1677,20 +1677,20 @@ let socket = null;
 
 function initSocket(email) {
     if (socket) return; // Already connected
-    
+
     // Connect to Backend Socket.io server
     socket = io('http://localhost:5000');
-    
+
     socket.on('connect', () => {
         console.log('✓ Connected to Socket.io real-time server');
         socket.emit('register-user', email);
     });
-    
+
     // Listen for e-waste submission status updates
     socket.on('submission-status-updated', (data) => {
         console.log('🔔 Real-time Submission Update:', data);
         alert(`🔔 Submission Update:\n${data.message}`);
-        
+
         const currentUser = localStorage.getItem('ecolearn_currentUser');
         if (currentUser) {
             loadWasteStats(currentUser);
@@ -1702,7 +1702,7 @@ function initSocket(email) {
     socket.on('claim-status-updated', (data) => {
         console.log('🔔 Real-time Claim Update:', data);
         alert(`🔔 Reward Claim Update:\n${data.message}`);
-        
+
         const currentUser = localStorage.getItem('ecolearn_currentUser');
         if (currentUser) {
             loadMyRewards(); // Reload user claim history table
