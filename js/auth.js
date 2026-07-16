@@ -3,11 +3,12 @@ const API_URL = 'http://localhost:5000/api';
 
 // Helper for API calls
 async function apiCall(endpoint, method = 'GET', data = null) {
+    const token = localStorage.getItem('ecolearn_token');
     const options = {
         method,
         headers: { 
             'Content-Type': 'application/json',
-            'admin-email': localStorage.getItem('ecolearn_currentUser') || ''
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         }
     };
     if (data) options.body = JSON.stringify(data);
@@ -681,6 +682,7 @@ window.addEventListener('click', function(e) {
 function logout() {
     if (confirm('Are you sure you want to log out?')) {
         localStorage.removeItem('ecolearn_currentUser');
+        localStorage.removeItem('ecolearn_token');
         document.getElementById('loginForm').reset();
         document.getElementById('signupForm').reset();
         document.getElementById('profileForm').reset();
