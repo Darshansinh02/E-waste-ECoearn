@@ -5,18 +5,28 @@ const User = require('../models/User');
 const Notification = require('../models/Notification');
 const Redemption = require('../models/Redemption');
 
-// Middleware to check if user is admin (simplified for demo)
-const checkAdmin = async (req, res, next) => {
-    // In a real app, this should decode JWT and check role.
-    // We'll trust the payload for this demo or find user by email.
-    const userEmail = req.headers['admin-email'];
-    if (!userEmail) return res.status(403).json({ message: 'Unauthorized' });
+const jwt = require('jsonwebtoken');
 
-    const user = await User.findOne({ email: userEmail });
-    if (!user || (!user.isAdmin && userEmail !== 'admin@ecoearn.com')) {
-        return res.status(403).json({ message: 'Unauthorized, admin only.' });
+const checkAdmin = async (req, res, next) => {
+    try {
+        const authHeader = req.header('Authorization');
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(403).json({ message: 'Unauthorized, token required.' });
+        }
+
+        const token = authHeader.replace('Bearer ', '');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secretcode');
+        
+        const user = await User.findById(decoded.id);
+        if (!user || !user.isAdmin) {
+            return res.status(403).json({ message: 'Unauthorized, admin only.' });
+        }
+        
+        req.user = user;
+        next();
+    } catch (err) {
+        return res.status(401).json({ message: 'Session expired or invalid.' });
     }
-    next();
 };
 
 // Get all submissions
