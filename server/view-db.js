@@ -23,7 +23,7 @@ async function viewDatabase() {
         console.log('\n📦 SUBMISSIONS:');
         const subs = await Submission.find().populate('user', 'email');
         subs.forEach(s => {
-            console.log(` - [${s.status.toUpperCase()}] ${s.wasteType} (${s.quantity}kg) from ${s.user ? s.user.email : 'Unknown'}`);
+            console.log(` - [${s.status.toUpperCase()}] ${s.wasteType} (${s.quantity} units) from ${s.user ? s.user.email : 'Unknown'}`);
         });
 
         console.log('\n----------------------------------');
