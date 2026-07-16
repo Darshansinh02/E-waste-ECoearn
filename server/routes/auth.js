@@ -41,10 +41,18 @@ router.post('/login', async (req, res) => {
     }
 });
 
+const auth = require('../middleware/auth');
+
 // Update Profile
-router.post('/profile', async (req, res) => {
+router.post('/profile', auth, async (req, res) => {
     try {
         const { email, username, birthdate, address, photoData } = req.body;
+        
+        // Prevent editing someone else's profile
+        if (req.user.email !== email) {
+            return res.status(403).json({ message: 'Access denied: Profile email mismatch' });
+        }
+
         const user = await User.findOneAndUpdate(
             { email },
             { username, birthdate, address, photoData, profileComplete: true },
@@ -57,8 +65,13 @@ router.post('/profile', async (req, res) => {
 });
 
 // Get User Data
-router.get('/user/:email', async (req, res) => {
+router.get('/user/:email', auth, async (req, res) => {
     try {
+        // Prevent accessing someone else's data unless admin
+        if (req.user.email !== req.params.email && !req.user.isAdmin) {
+            return res.status(403).json({ message: 'Access denied: Unauthorized user query' });
+        }
+
         const user = await User.findOne({ email: req.params.email });
         if (!user) return res.status(404).json({ message: 'User not found' });
         res.json(user);
