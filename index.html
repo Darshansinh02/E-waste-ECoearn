@@ -400,8 +400,8 @@
 
                         <!-- Waste Quantity -->
                         <div class="form-group">
-                            <label for="wasteQuantity">Quantity (in kg) *</label>
-                            <input type="number" id="wasteQuantity" placeholder="Enter weight in kg" min="0.1" step="0.1" required>
+                            <label for="wasteQuantity">Quantity (in units) *</label>
+                            <input type="number" id="wasteQuantity" placeholder="Enter number of units" min="1" step="1" required>
                         </div>
 
                         <!-- Waste Condition -->
@@ -469,7 +469,7 @@
                             </div>
                             <div class="stat-card">
                                 <div class="stat-number" id="totalWeight">0</div>
-                                <div class="stat-label">kg Recycled</div>
+                                <div class="stat-label">Units Recycled</div>
                             </div>
                             <div class="stat-card">
                                 <div class="stat-number" id="pointsEarned">0</div>
@@ -484,7 +484,7 @@
                                     <tr>
                                         <th>Date</th>
                                         <th>Item</th>
-                                        <th>Weight (kg)</th>
+                                        <th>Quantity (Units)</th>
                                         <th>Pickup / Drop</th>
                                         <th>Status</th>
                                         <th>Points</th>
@@ -649,7 +649,7 @@
                         </div>
                         <div class="stat-card">
                             <div class="stat-number" id="adminTotalWeight">0</div>
-                            <div class="stat-label">kg Total Recycled</div>
+                            <div class="stat-label">Total Units Recycled</div>
                         </div>
                     </div>
                 </div>
@@ -665,7 +665,7 @@
                                         <th>User</th>
                                         <th>Item</th>
                                         <th>Photo</th>
-                                        <th>Weight (kg)</th>
+                                        <th>Quantity (Units)</th>
                                         <th>Pickup Time</th>
                                         <th>Status</th>
                                         <th>Points</th>
