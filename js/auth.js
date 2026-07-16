@@ -565,6 +565,9 @@ async function loadUserDashboard(email) {
 
         // Refresh notification state for logged-in user
         initializeNotificationsForUser(email);
+
+        // Initialize Socket.io real-time connection
+        initSocket(email);
     } catch (err) {
         console.error('Failed to load dashboard:', err.message);
     }
@@ -683,6 +686,7 @@ function logout() {
     if (confirm('Are you sure you want to log out?')) {
         localStorage.removeItem('ecolearn_currentUser');
         localStorage.removeItem('ecolearn_token');
+        disconnectSocket();
         document.getElementById('loginForm').reset();
         document.getElementById('signupForm').reset();
         document.getElementById('profileForm').reset();
@@ -1643,3 +1647,54 @@ window.addEventListener('click', function(event) {
         closePhotoModal();
     }
 });
+
+// ==================== Socket.io Client Implementation ====================
+let socket = null;
+
+function initSocket(email) {
+    if (socket) return; // Already connected
+    
+    // Connect to Backend Socket.io server
+    socket = io('http://localhost:5000');
+    
+    socket.on('connect', () => {
+        console.log('✓ Connected to Socket.io real-time server');
+        socket.emit('register-user', email);
+    });
+    
+    // Listen for e-waste submission status updates
+    socket.on('submission-status-updated', (data) => {
+        console.log('🔔 Real-time Submission Update:', data);
+        alert(`🔔 Submission Update:\n${data.message}`);
+        
+        const currentUser = localStorage.getItem('ecolearn_currentUser');
+        if (currentUser) {
+            loadWasteStats(currentUser);
+            renderNotifications(currentUser);
+        }
+    });
+
+    // Listen for reward claim updates
+    socket.on('claim-status-updated', (data) => {
+        console.log('🔔 Real-time Claim Update:', data);
+        alert(`🔔 Reward Claim Update:\n${data.message}`);
+        
+        const currentUser = localStorage.getItem('ecolearn_currentUser');
+        if (currentUser) {
+            loadMyRewards(); // Reload user claim history table
+            renderNotifications(currentUser);
+        }
+    });
+
+    socket.on('disconnect', () => {
+        console.log('✗ Disconnected from Socket.io server');
+    });
+}
+
+function disconnectSocket() {
+    if (socket) {
+        socket.disconnect();
+        socket = null;
+        console.log('Logged out - Socket.io disconnected');
+    }
+}
