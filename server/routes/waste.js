@@ -3,11 +3,18 @@ const router = express.Router();
 const Submission = require('../models/Submission');
 const User = require('../models/User');
 const Redemption = require('../models/Redemption');
+const auth = require('../middleware/auth');
 
 // Submit Waste
-router.post('/submit', async (req, res) => {
+router.post('/submit', auth, async (req, res) => {
     try {
         const { email, wasteType, quantity, condition, description, collectionMethod, collectionAddress, pickupDate, pickupTime, ewastePhoto, pointsEarned } = req.body;
+        
+        // Ensure they only submit for their own account
+        if (req.user.email !== email) {
+            return res.status(403).json({ message: 'Access denied: Cannot submit waste for another user' });
+        }
+
         const user = await User.findOne({ email });
         if (!user) return res.status(404).json({ message: 'User not found' });
 
@@ -34,8 +41,13 @@ router.post('/submit', async (req, res) => {
 });
 
 // Get Submissions
-router.get('/submissions/:email', async (req, res) => {
+router.get('/submissions/:email', auth, async (req, res) => {
     try {
+        // Ensure they only query their own submissions (or admin)
+        if (req.user.email !== req.params.email && !req.user.isAdmin) {
+            return res.status(403).json({ message: 'Access denied: Unauthorized submissions query' });
+        }
+
         const user = await User.findOne({ email: req.params.email });
         if (!user) return res.status(404).json({ message: 'User not found' });
 
@@ -47,9 +59,15 @@ router.get('/submissions/:email', async (req, res) => {
 });
 
 // Redeem Reward
-router.post('/redeem', async (req, res) => {
+router.post('/redeem', auth, async (req, res) => {
     try {
         const { email, rewardName, points, shippingAddress, phoneNumber } = req.body;
+        
+        // Ensure they only redeem for their own account
+        if (req.user.email !== email) {
+            return res.status(403).json({ message: 'Access denied: Cannot redeem rewards for another user' });
+        }
+
         const user = await User.findOne({ email });
         if (!user) return res.status(404).json({ message: 'User not found' });
 
@@ -84,8 +102,13 @@ router.post('/redeem', async (req, res) => {
 });
 
 // Get Redemptions
-router.get('/redemptions/:email', async (req, res) => {
+router.get('/redemptions/:email', auth, async (req, res) => {
     try {
+        // Ensure they only query their own redemptions (or admin)
+        if (req.user.email !== req.params.email && !req.user.isAdmin) {
+            return res.status(403).json({ message: 'Access denied: Unauthorized redemptions query' });
+        }
+
         const user = await User.findOne({ email: req.params.email });
         if (!user) return res.status(404).json({ message: 'User not found' });
 
