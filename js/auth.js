@@ -983,6 +983,39 @@ async function loadWasteStats(email) {
         document.getElementById('pointsEarned').textContent = user.totalPoints || 0;
         document.getElementById('pointsBalance').textContent = user.totalPoints || 0;
 
+        // Render user detailed submissions table
+        const submissionsTable = document.getElementById('userSubmissionsTable');
+        if (submissionsTable) {
+            submissionsTable.innerHTML = '';
+            if (submissions.length === 0) {
+                submissionsTable.innerHTML = '<tr><td colspan="7" style="text-align: center;">No submissions yet.</td></tr>';
+            } else {
+                window.userSubmissions = submissions; // Cache user submissions globally
+                submissions.forEach(sub => {
+                    let scheduleInfo = 'Drop Center';
+                    if (sub.collectionMethod === 'home' && sub.pickupDate) {
+                        scheduleInfo = `${sub.pickupDate} (${sub.pickupTime})`;
+                    }
+                    
+                    let statusBadge = `<span class="badge pending">Pending</span>`;
+                    if (sub.status === 'verified') statusBadge = `<span class="badge verified">Verified</span>`;
+                    if (sub.status === 'rejected') statusBadge = `<span class="badge rejected">Rejected</span>`;
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${new Date(sub.submittedAt).toLocaleDateString()}</td>
+                        <td style="text-transform: capitalize;">${sub.wasteType}</td>
+                        <td>${sub.quantity} kg</td>
+                        <td>${scheduleInfo}</td>
+                        <td>${statusBadge}</td>
+                        <td>${sub.pointsEarned}</td>
+                        <td><button type="button" class="btn-sm btn-secondary" onclick="viewUserSubmissionPhoto('${sub._id}')">👁 View</button></td>
+                    `;
+                    submissionsTable.appendChild(row);
+                });
+            }
+        }
+
         // ================= Eco Calculations =================
         // 1. CO2 Saved (approx 1.4kg CO2 saved per 1kg of e-waste recycled)
         const co2Saved = (verifiedWeight * 1.4).toFixed(1);
@@ -1010,22 +1043,26 @@ async function loadWasteStats(email) {
                 ecoLevelBadge.innerHTML = '🌱 Eco Starter';
                 ecoLevelBadge.style.color = '#1e8e3e';
                 ecoLevelBadge.style.backgroundColor = '#e6f4ea';
+                ecoLevelBadge.style.background = ''; // reset gradient
             } else if (userPts < 2000) {
                 ecoLevelBadge.innerHTML = '🌿 Green Explorer';
                 ecoLevelBadge.style.color = '#00796b';
                 ecoLevelBadge.style.backgroundColor = '#e0f2f1';
+                ecoLevelBadge.style.background = ''; // reset gradient
             } else if (userPts < 5000) {
                 ecoLevelBadge.innerHTML = '🛡️ Planet Defender';
                 ecoLevelBadge.style.color = '#0277bd';
                 ecoLevelBadge.style.backgroundColor = '#e1f5fe';
+                ecoLevelBadge.style.background = ''; // reset gradient
             } else if (userPts < 10000) {
                 ecoLevelBadge.innerHTML = '🏆 Sustainability Champion';
                 ecoLevelBadge.style.color = '#e65100';
                 ecoLevelBadge.style.backgroundColor = '#fff3e0';
+                ecoLevelBadge.style.background = ''; // reset gradient
             } else {
                 ecoLevelBadge.innerHTML = '🌍 Earth Guardian';
                 ecoLevelBadge.style.color = '#fff';
-                ecoLevelBadge.style.backgroundColor = 'linear-gradient(135deg, #FFD700, #F5A623)';
+                ecoLevelBadge.style.background = 'linear-gradient(135deg, #FFD700, #F5A623)';
                 ecoLevelBadge.style.border = 'none';
             }
         }
@@ -1308,11 +1345,12 @@ async function loadAdminDashboard() {
         document.getElementById('adminTotalWeight').textContent = stats.totalWeight;
 
         const submissions = await apiCall('/admin/submissions');
+        window.adminSubmissions = submissions; // Cache admin submissions globally
         const tableBody = document.getElementById('adminSubmissionsTable');
         tableBody.innerHTML = '';
 
         if (submissions.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No submissions found</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;">No submissions found</td></tr>';
             return;
         }
 
@@ -1341,10 +1379,13 @@ async function loadAdminDashboard() {
                 actionHtml = `<span style="color: #666; font-size: 12px;">Processed</span>`;
             }
 
+            const userEmailStr = sub.user ? sub.user.email : 'Unknown User';
+
             row.innerHTML = `
                 <td>${new Date(sub.submittedAt).toLocaleDateString()}</td>
-                <td>${sub.user.email}</td>
-                <td>${sub.wasteType}</td>
+                <td>${userEmailStr}</td>
+                <td style="text-transform: capitalize;">${sub.wasteType}</td>
+                <td><button class="btn-sm btn-secondary" onclick="viewAdminSubmissionPhoto('${sub._id}')">👁 View</button></td>
                 <td>${sub.quantity}</td>
                 <td>${scheduleInfo}</td>
                 <td>${statusBadge}</td>
@@ -1538,5 +1579,65 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         // No user logged in - show login page by default
         switchPage('loginPage');
+    }
+});
+
+// ==================== Photo Lightbox Modal Helper Functions ====================
+window.viewAdminSubmissionPhoto = function(subId) {
+    const sub = window.adminSubmissions?.find(s => s._id === subId);
+    if (sub && sub.ewastePhoto) {
+        showPhotoModal(sub.ewastePhoto, `${sub.user?.username || 'User'}'s ${sub.wasteType}`);
+    } else {
+        alert('Photo not available.');
+    }
+};
+
+window.viewUserSubmissionPhoto = function(subId) {
+    const sub = window.userSubmissions?.find(s => s._id === subId);
+    if (sub && sub.ewastePhoto) {
+        showPhotoModal(sub.ewastePhoto, `Your Submitted ${sub.wasteType}`);
+    } else {
+        alert('Photo not available.');
+    }
+};
+
+function showPhotoModal(imgSrc, title) {
+    let modal = document.getElementById('photoInspectionModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'photoInspectionModal';
+        modal.className = 'custom-modal-overlay';
+        modal.innerHTML = `
+            <div class="custom-modal-content">
+                <div class="custom-modal-header">
+                    <h3 id="photoModalTitle">E-Waste Photo</h3>
+                    <span class="custom-modal-close" onclick="closePhotoModal()">&times;</span>
+                </div>
+                <div class="custom-modal-body">
+                    <img id="photoModalImg" src="" alt="E-waste submission image">
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    document.getElementById('photoModalTitle').textContent = title || 'E-Waste Photo';
+    document.getElementById('photoModalImg').src = imgSrc;
+    modal.style.display = 'flex';
+}
+
+window.closePhotoModal = function() {
+    const modal = document.getElementById('photoInspectionModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.getElementById('photoModalImg').src = '';
+    }
+};
+
+// Close when clicking outside of the modal content
+window.addEventListener('click', function(event) {
+    const modal = document.getElementById('photoInspectionModal');
+    if (event.target === modal) {
+        closePhotoModal();
     }
 });
