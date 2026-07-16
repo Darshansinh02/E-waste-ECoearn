@@ -48,28 +48,27 @@ router.post('/verify', checkAdmin, async (req, res) => {
         if (!submission) return res.status(404).json({ message: 'Submission not found' });
         if (submission.status !== 'pending') return res.status(400).json({ message: 'Already processed' });
 
+        const user = await User.findById(submission.user);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
         if (action === 'approve') {
             submission.status = 'verified';
-            // Find user and add points
-            const user = await User.findById(submission.user);
-            if (user) {
-                user.totalPoints += submission.pointsEarned;
-                await user.save();
+            user.totalPoints += submission.pointsEarned;
+            await user.save();
 
-                // Create Notification
-                const notification = new Notification({
-                    user: user._id,
-                    message: `Congratulations! Your ${submission.wasteType} submission was verified. You earned ${submission.pointsEarned} points!`,
-                    type: 'points_earned'
-                });
-                await notification.save();
-            }
+            // Create Notification
+            const notification = new Notification({
+                user: user._id,
+                message: `Congratulations! Your ${submission.wasteType} submission was verified. You earned ${submission.pointsEarned} points!`,
+                type: 'points_earned'
+            });
+            await notification.save();
         } else if (action === 'reject') {
             submission.status = 'rejected';
             
             // Create Notification
             const notification = new Notification({
-                user: submission.user,
+                user: user._id,
                 message: `Sorry, your ${submission.wasteType} submission was rejected. Please contact support for details.`,
                 type: 'system'
             });
@@ -79,6 +78,15 @@ router.post('/verify', checkAdmin, async (req, res) => {
         }
 
         await submission.save();
+
+        // Emit real-time Socket.io event to user room
+        req.io.to(user.email).emit('submission-status-updated', {
+            submissionId: submission._id,
+            status: submission.status,
+            pointsEarned: submission.pointsEarned,
+            message: `Your ${submission.wasteType} submission was ${action}d.`
+        });
+
         res.json({ message: `Submission ${action}d successfully.`, submission });
 
     } catch (err) {
@@ -225,6 +233,17 @@ router.post('/claims/:id/update', checkAdmin, async (req, res) => {
         }
         
         await claim.save();
+
+        // Emit real-time Socket.io event to user room
+        if (claim.user && claim.user.email) {
+            req.io.to(claim.user.email).emit('claim-status-updated', {
+                claimId: claim._id,
+                status: claim.status,
+                rewardName: claim.rewardName,
+                message: `Your reward "${claim.rewardName}" is now ${claim.status}.`
+            });
+        }
+
         res.json({ message: `Claim updated to ${claim.status}` });
     } catch (err) {
         res.status(500).json({ message: err.message });
