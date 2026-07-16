@@ -753,9 +753,33 @@ document.getElementById('submitWasteForm')?.addEventListener('submit', async fun
         errorDiv.textContent = 'Please select a Pickup Date and Time Slot for home collection.';
         return;
     }
+    // Calculate base points based on e-waste category:
+    let basePoints = 10;
+    if (wasteType === 'laptop') {
+        basePoints = 30;
+    } else if (wasteType === 'monitor' || wasteType === 'printer') {
+        basePoints = 20;
+    } else if (wasteType === 'mobile' || wasteType === 'tablet') {
+        basePoints = 15;
+    } else if (wasteType === 'keyboard' || wasteType === 'mouse' || wasteType === 'charger') {
+        basePoints = 5;
+    } else {
+        basePoints = 10; // other / default
+    }
 
-    // Calculate points: 10 points per kg
-    const pointsEarned = Math.floor(wasteQuantity * 10);
+    // Apply multipliers based on e-waste condition:
+    let conditionMultiplier = 1.0;
+    if (wasteCondition === 'working') {
+        conditionMultiplier = 1.5;
+    } else if (wasteCondition === 'broken') {
+        conditionMultiplier = 1.0;
+    } else if (wasteCondition === 'damaged') {
+        conditionMultiplier = 0.5;
+    } else if (wasteCondition === 'unknown') {
+        conditionMultiplier = 0.8;
+    }
+
+    const pointsEarned = Math.floor(wasteQuantity * basePoints * conditionMultiplier);
 
     const submissionData = {
         email: currentUser,
@@ -975,10 +999,10 @@ async function loadWasteStats(email) {
 
         // Update dashboard stats (Basic)
         document.getElementById('totalSubmissions').textContent = submissions.length;
-        document.getElementById('totalWeight').textContent = totalWeight.toFixed(2);
+        document.getElementById('totalWeight').textContent = totalWeight.toFixed(0);
         
         const statsDevices = document.getElementById('statsDevices');
-        if (statsDevices) statsDevices.textContent = verifiedWeight.toFixed(2) + ' kg';
+        if (statsDevices) statsDevices.textContent = verifiedWeight.toFixed(0) + ' units';
         
         const statsPoints = document.getElementById('statsPoints');
         if (statsPoints) statsPoints.textContent = user.totalPoints || 0;
@@ -1011,7 +1035,7 @@ async function loadWasteStats(email) {
                     row.innerHTML = `
                         <td>${new Date(sub.submittedAt).toLocaleDateString()}</td>
                         <td style="text-transform: capitalize;">${sub.wasteType}</td>
-                        <td>${sub.quantity} kg</td>
+                        <td>${sub.quantity} units</td>
                         <td>${scheduleInfo}</td>
                         <td>${statusBadge}</td>
                         <td>${sub.pointsEarned}</td>
@@ -1023,13 +1047,13 @@ async function loadWasteStats(email) {
         }
 
         // ================= Eco Calculations =================
-        // 1. CO2 Saved (approx 1.4kg CO2 saved per 1kg of e-waste recycled)
+        // 1. CO2 Saved (approx 1.4kg CO2 saved per 1 unit of e-waste recycled)
         const co2Saved = (verifiedWeight * 1.4).toFixed(1);
         
-        // 2. Toxins Prevented (approx 50g of toxins like Lead/Mercury kept out of earth per 1kg)
+        // 2. Toxins Prevented (approx 50g of toxins like Lead/Mercury kept out of earth per 1 unit)
         const toxinsSaved = (verifiedWeight * 50).toFixed(0);
         
-        // 3. Trees Planted equivalent (approx 1 tree plants worth of carbon per 10kg e-waste)
+        // 3. Trees Planted equivalent (approx 1 tree plants worth of carbon per 10 units of e-waste)
         const treesPlanted = Math.floor(verifiedWeight / 10);
 
         const impactCo2 = document.getElementById('impactCo2');
