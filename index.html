@@ -196,7 +196,7 @@
                                     <input type="text" id="birthdateInput" placeholder="DD/MM/YYYY" maxlength="10" required>
                                 </div>
                                 <button type="button" class="btn-date-picker" onclick="openDatePicker()">📅 Pick</button>
-                                <input type="date" id="birthdatePickerHidden" style="display: none;">
+                                <input type="date" id="birthdatePickerHidden" style="position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;">
                             </div>
                             <span class="form-hint">You can type (DD/MM/YYYY) or click the Pick button</span>
                             <span class="form-hint" id="birthdateStatus"></span>
