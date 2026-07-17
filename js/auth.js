@@ -1,7 +1,7 @@
 // ==================== Backend Configuration ====================
 // Automatically switch backend URL depending on if running locally or in production
 const DEV_BACKEND_URL = 'http://localhost:5000';
-const PROD_BACKEND_URL = 'https://ecoearn-backend.onrender.com'; // REPLACE this with your actual deployed Render backend URL
+const PROD_BACKEND_URL = 'https://e-waste-ecoearn.onrender.com'; // Deployed Render backend URL
 
 const BACKEND_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '') 
     ? DEV_BACKEND_URL 
