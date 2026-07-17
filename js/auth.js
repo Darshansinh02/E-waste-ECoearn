@@ -1,5 +1,13 @@
 // ==================== Backend Configuration ====================
-const API_URL = 'http://localhost:5000/api';
+// Automatically switch backend URL depending on if running locally or in production
+const DEV_BACKEND_URL = 'http://localhost:5000';
+const PROD_BACKEND_URL = 'https://ecoearn-backend.onrender.com'; // REPLACE this with your actual deployed Render backend URL
+
+const BACKEND_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '') 
+    ? DEV_BACKEND_URL 
+    : PROD_BACKEND_URL;
+
+const API_URL = `${BACKEND_URL}/api`;
 
 // Helper for API calls
 async function apiCall(endpoint, method = 'GET', data = null) {
@@ -1679,7 +1687,7 @@ function initSocket(email) {
     if (socket) return; // Already connected
 
     // Connect to Backend Socket.io server
-    socket = io('http://localhost:5000');
+    socket = io(BACKEND_URL);
 
     socket.on('connect', () => {
         console.log('✓ Connected to Socket.io real-time server');
