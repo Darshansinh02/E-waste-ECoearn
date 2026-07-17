@@ -34,7 +34,14 @@ async function apiCall(endpoint, method = 'GET', data = null) {
 
 // ==================== Birthdate Functions ====================
 function openDatePicker() {
-    document.getElementById('birthdatePickerHidden').click();
+    const picker = document.getElementById('birthdatePickerHidden');
+    if (picker) {
+        try {
+            picker.showPicker();
+        } catch (e) {
+            picker.click();
+        }
+    }
 }
 
 function formatDateToDDMMYYYY(dateString) {
