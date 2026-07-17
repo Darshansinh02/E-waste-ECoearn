@@ -2,6 +2,10 @@
 
 A full-stack E-Waste Management web application with user authentication, photo submission, real-time status notifications, and an administrative control panel to manage collections.
 
+### 🌐 Live Deployment
+* **Live Website:** [e-waste-ecoearn.netlify.app](https://e-waste-ecoearn.netlify.app)
+* **Backend API:** [e-waste-ecoearn.onrender.com](https://e-waste-ecoearn.onrender.com)
+
 ---
 
 ## 🚀 Technologies Used
@@ -97,6 +101,6 @@ node setup-admin-direct.js
 ## 🌐 Production Deployment
 
 For global, public access, deploy using the following setup:
-1. **Database:** Host your MongoDB database on **MongoDB Atlas** (M0 Free Tier). Ensure the IP Access List is set to `0.0.0.0/0` to allow connections from your cloud host.
-2. **Backend:** Deploy the `server` subdirectory as a **Web Service** on **Render** or **Railway**. Configure the environment variables (`MONGO_URI` and `JWT_SECRET`) directly on the host console.
-3. **Frontend:** Deploy the root directory static files on **GitHub Pages** or **Netlify**.
+1. **Database:** Host your MongoDB database on **MongoDB Atlas** (M0 Free Tier). Ensure the Network Access settings permit incoming connections from your backend cloud host.
+2. **Backend:** Deploy the `server` subdirectory as a **Web Service** on **Render**. Configure the environment variables (`MONGO_URI` and `JWT_SECRET`) directly on the host console.
+3. **Frontend:** Deploy the root directory static files on **Netlify**.
